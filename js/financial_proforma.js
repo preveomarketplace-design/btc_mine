@@ -423,6 +423,7 @@ function createCumulativeCashFlowChart(projections) {
                 data: cumulativeData,
                 borderColor: '#2d6a4f',
                 backgroundColor: function(context) {
+                    if (!context.parsed) return 'rgba(45, 106, 79, 0.2)';
                     const value = context.parsed.y;
                     return value >= 0 ? 'rgba(45, 106, 79, 0.2)' : 'rgba(231, 76, 60, 0.2)';
                 },
@@ -430,6 +431,7 @@ function createCumulativeCashFlowChart(projections) {
                 fill: true,
                 tension: 0.4,
                 pointBackgroundColor: function(context) {
+                    if (!context.parsed) return '#2d6a4f';
                     const value = context.parsed.y;
                     return value >= 0 ? '#2d6a4f' : '#e74c3c';
                 },
