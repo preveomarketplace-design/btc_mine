@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Professional off-grid Bitcoin mining calculator for stranded gas projects">
+    <meta name="author" content="Mining Analytics">
+    <title>Off-Grid Bitcoin Mining Calculator - Professional Edition</title>
+    <link rel="stylesheet" href="./css/styles.css">
+    <link rel="stylesheet" href="./css/styles-enhanced.css">
+</head>
+<body>
+    <a href="#main-content" class="sr-only">Skip to main content</a>
+    <div class="container" id="main-content">
+        <div class="page">
+            <div class="header">
+                <h1>OFF-GRID BITCOIN MINING CALCULATOR</h1>
+                <div class="subtitle">PROFESSIONAL PROJECT PLANNING TOOL STRANDED GAS TO BITCOIN<span id="reportDate"></span></div>
+            </div>
+
+            <!-- Tab Navigation -->
+            <nav class="tab-navigation" role="tablist" aria-label="Project steps">
+                <button class="tab-button active" onclick="switchStep(1)" role="tab" aria-selected="true" aria-controls="step1" id="tab1">1. Inputs</button>
+                <button class="tab-button" onclick="switchStep(2)" role="tab" aria-selected="false" aria-controls="step2" id="tab2">2. Mining Equipment</button>
+                <button class="tab-button" onclick="switchStep(3)" role="tab" aria-selected="false" aria-controls="step3" id="tab3">3. CAPEX</button>
+                <button class="tab-button" onclick="switchStep(4)" role="tab" aria-selected="false" aria-controls="step4" id="tab4">4. OPEX</button>
+                <button class="tab-button" onclick="switchStep(5)" role="tab" aria-selected="false" aria-controls="step5" id="tab5">5. Financial Model</button>
+                <button class="tab-button" onclick="switchStep(6)" role="tab" aria-selected="false" aria-controls="step6" id="tab6">6. Investor Analysis</button>
+                <button class="tab-button" onclick="switchStep(7)" role="tab" aria-selected="false" aria-controls="step7" id="tab7">7. Monte Carlo</button>
+            </nav>
+
+            <!-- STEP 1: INPUTS -->
+            <div id="step1" class="tab-content active" role="tabpanel" aria-labelledby="tab1">
+                <div class="controls">
+                    <h3>Step 1: Basic Input Parameters</h3>
+                    <div class="input-grid">
+                        <div class="input-group">
+                            <label for="gasPrice">Gas Price ($/MCF)</label>
+                            <input type="number" id="gasPrice" value="0.50" step="0.01" min="0" onchange="updateInputSummary()" aria-label="Gas price per thousand cubic feet in US dollars" aria-describedby="gasPrice-help">
+                            <small id="gasPrice-help" class="sr-only">Enter the cost of natural gas per MCF. Typical range: $0.01 to $10.00</small>
+                        </div>
+                        <div class="input-group">
+                            <label for="hashPrice">Daily Hash Price ($/PH)</label>
+                            <input type="number" id="hashPrice" value="50.00" step="1" min="0.01" onchange="updateInputSummary()" aria-label="Daily hash price per petahash in US dollars">
+                        </div>
+                        <div class="input-group">
+                            <label for="gasAvailable">Gas Available (MCF/day)</label>
+                            <input type="number" id="gasAvailable" value="2000" step="10" min="1" onchange="updateInputSummary()" aria-label="Daily natural gas availability in thousand cubic feet">
+                        </div>
+                        <div class="input-group">
+                            <label for="powerGenerated">Power Generated (kW)</label>
+                            <input type="number" id="powerGenerated" value="2500" step="100" min="1" onchange="updateInputSummary()" aria-label="Total power generation capacity in kilowatts">
+                        </div>
+                        <div class="input-group">
+                            <label for="startYear">Project Start Year</label>
+                            <input type="number" id="startYear" value="2026" step="1" min="2024" max="2035" onchange="updateInputSummary()" aria-label="Project start year, next BTC halving in 2028">
+                            <small style="color: #6c757d; font-size: 9px; display: block; margin-top: 4px;">Next BTC halving: April 2028</small>
+                        </div>
+                    </div>
+                    <button onclick="saveStep1()">Continue to Step 2</button>
+                </div>
+
+                <div class="section-title">INPUT SUMMARY</div>
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-label">Power Capacity</div>
+                        <div class="metric-value" id="summaryPower">2.50 MW</div>
+                        <div class="metric-subtext">Total generation</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Daily Energy Cost</div>
+                        <div class="metric-value" id="summaryEnergyCost">$1,000</div>
+                        <div class="metric-subtext">From gas consumption</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Hash Price</div>
+                        <div class="metric-value" id="summaryHashPrice">$50.00</div>
+                        <div class="metric-subtext">Per PH/day</div>
+                    </div>
+                </div>
+
+                <div class="section-title">DETAILED INPUT VALUES</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th class="number">Value</th>
+                            <th>Unit</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Gas Price</strong></td>
+                            <td class="number" id="tableGasPrice">0.50</td>
+                            <td>$/MCF</td>
+                            <td>Cost per thousand cubic feet of natural gas</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Daily Hash Price</strong></td>
+                            <td class="number" id="tableHashPrice">50.00</td>
+                            <td>$/PH/day</td>
+                            <td>Market rate for 1 Petahash per day</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Gas Available</strong></td>
+                            <td class="number" id="tableGasAvailable">2,000</td>
+                            <td>MCF/day</td>
+                            <td>Natural gas available per day</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Power Generated</strong></td>
+                            <td class="number" id="tablePowerGenerated">2,500</td>
+                            <td>kW</td>
+                            <td>Total electrical power output</td>
+                        </tr>
+                        <tr class="highlight-row">
+                            <td><strong>Annual Gas Cost</strong></td>
+                            <td class="number" id="tableAnnualGas">$365,000</td>
+                            <td>$/year</td>
+                            <td>Total fuel cost annually</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- STEP 2: MINING EQUIPMENT -->
+            <div id="step2" class="tab-content" role="tabpanel" aria-labelledby="tab2">
+                <div class="info-box">
+                    <div class="info-box-title">From Previous Steps</div>
+                    <div class="info-box-text">
+                        Power Available: <strong><span id="savedPower2">2.50 MW</span></strong>
+                    </div>
+                </div>
+                <div class="controls">
+                    <h3>Step 2: Mining Equipment Selection & Analysis</h3>
+                </div>
+                <div class="section-title">SELECT YOUR MINING EQUIPMENT</div>
+                <div class="controls" style="background: #f8f9fa; padding: 25px; border: 1px solid #dee2e6; border-radius: 2px;">
+                    <div class="input-grid" style="grid-template-columns: 1fr 1fr;">
+                        <div class="input-group" style="grid-column: 1 / -1;">
+                            <label for="minerPresetSelect" style="font-size: 11px; font-weight: 600; margin-bottom: 8px;">Miner Model</label>
+                            <select id="minerPresetSelect" style="width: 100%; padding: 10px; font-size: 11px; border: 1px solid #ced4da; border-radius: 2px; background: white;" onchange="onMinerPresetChange()" aria-label="Select mining hardware model">
+                                <option value="">-- Select a Miner Model --</option>
+                                <optgroup label="Popular Models (2024)">
+                                    <option value="0">Antminer S21 Pro - 234 TH/s, 3510W, 15.0 J/TH</option>
+                                    <option value="1">Antminer S21 - 200 TH/s, 3500W, 17.5 J/TH</option>
+                                    <option value="5">Whatsminer M60S - 172 TH/s, 3344W, 19.4 J/TH</option>
+                                </optgroup>
+                                <optgroup label="High Performance">
+                                    <option value="2">Antminer S19 XP - 140 TH/s, 3010W, 21.5 J/TH</option>
+                                    <option value="6">Whatsminer M50S++ - 150 TH/s, 3306W, 22.0 J/TH</option>
+                                    <option value="9">AvalonMiner 1466 - 150 TH/s, 3500W, 23.3 J/TH</option>
+                                </optgroup>
+                                <optgroup label="Budget Options">
+                                    <option value="3">Antminer S19 Pro - 110 TH/s, 3250W, 29.5 J/TH</option>
+                                    <option value="4">Antminer S19j Pro - 100 TH/s, 3050W, 30.5 J/TH</option>
+                                    <option value="7">Whatsminer M50S - 130 TH/s, 3306W, 25.4 J/TH</option>
+                                </optgroup>
+                                <optgroup label="Custom">
+                                    <option value="custom">Add Custom Miner...</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="minerSpecsDisplay" style="display: none; margin-top: 20px; padding: 20px; background: white; border: 1px solid #dee2e6; border-radius: 2px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <div>
+                                <h4 style="font-size: 13px; font-weight: 600; color: #2c3e50; margin-bottom: 5px;" id="selectedMinerName">-</h4>
+                                <p style="font-size: 10px; color: #6c757d;" id="selectedMinerManufacturer">-</p>
+                            </div>
+                            <div style="background: #d4edda; color: #155724; padding: 6px 12px; border-radius: 2px; font-size: 10px; font-weight: 600;">
+                                SELECTED
+                            </div>
+                        </div>
+                        <div class="input-grid">
+                            <div class="input-group">
+                                <label for="selectedHashrate">Hashrate (TH/s)</label>
+                                <input type="number" id="selectedHashrate" disabled style="background: #e9ecef; cursor: not-allowed;">
+                            </div>
+                            <div class="input-group">
+                                <label for="selectedPower">Power (W)</label>
+                                <input type="number" id="selectedPower" disabled style="background: #e9ecef; cursor: not-allowed;">
+                            </div>
+                            <div class="input-group">
+                                <label for="selectedEfficiency">Efficiency (J/TH)</label>
+                                <input type="number" id="selectedEfficiency" disabled style="background: #e9ecef; cursor: not-allowed;">
+                            </div>
+                            <div class="input-group">
+                                <label for="selectedCost">Unit Cost ($)</label>
+                                <input type="number" id="selectedCost" step="100" min="0">
+                                <small style="color: #6c757d; font-size: 9px;">Editable - adjust for regional pricing</small>
+                            </div>
+                            <div class="input-group">
+                                <label for="selectedQuantity">Quantity</label>
+                                <input type="number" id="selectedQuantity" value="1" min="1" step="1">
+                            </div>
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <button onclick="addSelectedMiner()" class="btn-success">Add to Fleet</button>
+                            <button onclick="cancelMinerSelection()" class="btn-secondary" style="margin-left: 10px;">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-title">FLEET PERFORMANCE METRICS</div>
+                <div class="metrics-grid-4">
+                    <div class="metric-card">
+                        <div class="metric-label">Total Hashrate</div>
+                        <div class="metric-value" id="totalHashratePH">0 PH/s</div>
+                        <div class="metric-subtext">Combined fleet</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Fleet Efficiency</div>
+                        <div class="metric-value" id="fleetEfficiency">0 J/TH</div>
+                        <div class="metric-subtext">Weighted average</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Power Utilization</div>
+                        <div class="metric-value" id="powerUtilization">0%</div>
+                        <div class="metric-subtext">Of available capacity</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Total Equipment Cost</div>
+                        <div class="metric-value" id="totalMinerCost">$0</div>
+                        <div class="metric-subtext">Hardware investment</div>
+                    </div>
+                </div>
+
+                <div class="section-title">YOUR FLEET</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>Qty</th>
+                            <th>TH/s</th>
+                            <th>Watts</th>
+                            <th>J/TH</th>
+                            <th>W/TH</th>
+                            <th>Grade</th>
+                            <th>Unit Cost</th>
+                            <th class="number">Total Cost</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="minerTable">
+                        <tr>
+                            <td colspan="10" class="text-center text-muted">No miners added. Select a model from the dropdown above.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="alert-warning mt-2" id="powerWarning" style="display: none;">
+                    <div class="alert-warning-title">Power Capacity Warning</div>
+                    <div class="alert-warning-text">
+                        Total power consumption exceeds available capacity. Reduce miner quantity or select more efficient models.
+                    </div>
+                </div>
+                <button onclick="saveStep2()">Continue to CAPEX</button>
+            </div>
+
+            <!-- STEP 3: CAPEX -->
+            <div id="step3" class="tab-content" role="tabpanel" aria-labelledby="tab3">
+                <div class="info-box">
+                    <div class="info-box-title">From Previous Steps</div>
+                    <div class="info-box-text">
+                        Miners: <strong><span id="savedMinerQty3">0</span> units</strong> | 
+                        Total Hashrate: <strong><span id="savedHashrate3">0 PH/s</span></strong> | 
+                        Power: <strong><span id="savedPower3">2.50 MW</span></strong>
+                    </div>
+                </div>
+                <div class="controls">
+                    <h3>Step 3: Capital Expenditure Breakdown</h3>
+                    <button onclick="calculateCapex()">Recalculate CAPEX</button>
+                </div>
+                <div class="section-title">CAPEX SUMMARY</div>
+                <div class="metrics-grid-4">
+                    <div class="metric-card highlight">
+                        <div class="metric-label">Total CAPEX</div>
+                        <div class="metric-value" id="summaryTotalCapex">$0</div>
+                        <div class="metric-subtext">Total investment</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Infrastructure</div>
+                        <div class="metric-value" id="summaryInfraCapex">$0</div>
+                        <div class="metric-subtext">Site & equipment</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Mining Hardware</div>
+                        <div class="metric-value" id="summaryMinerCapex">$0</div>
+                        <div class="metric-subtext">From Step 2</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Cost per PH/s</div>
+                        <div class="metric-value" id="summaryCostPerPH">$0</div>
+                        <div class="metric-subtext">Capital efficiency</div>
+                    </div>
+                </div>
+                <div class="section-title">DETAILED CAPEX BREAKDOWN</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Item</th>
+                            <th class="number">Cost ($)</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="category-header">
+                            <td colspan="4">DATA CENTER INFRASTRUCTURE</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><strong>Mining Containers</strong></td>
+                            <td class="number">
+                                <input type="number" class="editable-input" id="cost_container" value="250000" step="10000" onchange="calculateCapex()" aria-label="Cost of mining containers">
+                            </td>
+                            <td>Container housing for miners</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><strong>Mining Equipment</strong></td>
+                            <td class="number">
+                                <input type="number" class="editable-input readonly-input" id="cost_miners" value="0" readonly aria-label="Cost of mining equipment from Step 2">
+                            </td>
+                            <td>Hardware from Step 2 (auto-calculated)</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><strong>Cooling Systems</strong></td>
+                            <td class="number">
+                                <input type="number" class="editable-input" id="cost_cooling" value="150000" step="10000" onchange="calculateCapex()" aria-label="Cost of cooling systems">
+                            </td>
+                            <td>Air cooling and ventilation</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><strong>Networking Equipment</strong></td>
+                            <td class="number">
+                                <input type="number" class="editable-input" id="cost_networking" value="25000" step="1000" onchange="calculateCapex()" aria-label="Cost of networking equipment">
+                            </td>
+                            <td>Switches, routers, cables</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><strong>PDU & Electrical</strong></td>
+                            <td class="number">
+                                <input type="number" class="editable-input" id="cost_pdu" value="75000" step="5000" onchange="calculateCapex()" aria-label="Cost of PDU and electrical">
+                            </td>
+                            <td>Power distribution units</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><strong>Starlink Internet</strong></td>
+                            <td class="number">
+                                <input type="number" class="editable-input" id="cost_starlink" value="2500" step="500" onchange="calculateCapex()" aria-label="Cost of Starlink internet">
+                            </td>
+                            <td>Satellite connectivity hardware</td>
+                        </tr>
+
+                        <tr class="category-header">
+                            <td colspan="4">GAS INFRASTRUCTURE</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><strong>Generator Sets</strong></td>
+                            <td class="number">
+                                <input type="number" class="editable-input" id="cost_generator" value="750000" step="50000" onchange="calculateCapex()" aria-label="Cost of generator sets">
+                            </td>
+                            <td>Natural gas generators (2.5 MW)</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><strong>Gas Separator</strong></td>
+                            <td class="number">
+                                <input type="number" class="editable-input" id="cost_separator" value="25000" step="5000" onchange="calculateCapex()" aria-label="Cost of gas separator">
+                            </td>
+                            <td>Gas-liquid separation system</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><strong>Desiccant & Treatment</strong></td>
+                            <td class="number">
+                                <input type="number" class="editable-input" id="cost_desiccant" value="15000" step="1000" onchange="calculateCapex()" aria-label="Cost of desiccant and treatment">
+                            </td>
+                            <td>Gas drying and conditioning</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><strong>Piping & Connections</strong></td>
+                            <td class="number">
+                                <input type="number" class="editable-input" id="cost_piping" value="35000" step="5000" onchange="calculateCapex()" aria-label="Cost of piping and connections">
+                            </td>
+                            <td>Gas distribution system</td>
+                        </tr>
+
+                        <tr class="category-header">
+                            <td colspan="4">SITE DEVELOPMENT</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><strong>Site Preparation</strong></td>
+                            <td class="number">
+                                <input type="number" class="editable-input" id="cost_site_prep" value="100000" step="10000" onchange="calculateCapex()" aria-label="Cost of site preparation">
+                            </td>
+                            <td>Land clearing, grading, access roads</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><strong>Installation & Deployment</strong></td>
+                            <td class="number">
+                                <input type="number" class="editable-input" id="cost_deployment" value="50000" step="5000" onchange="calculateCapex()" aria-label="Cost of installation and deployment">
+                            </td>
+                            <td>Setup and commissioning</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><strong>Security Systems</strong></td>
+                            <td class="number">
+                                <input type="number" class="editable-input" id="cost_security_capex" value="25000" step="5000" onchange="calculateCapex()" aria-label="Cost of security systems">
+                            </td>
+                            <td>Cameras, fencing, alarms</td>
+                        </tr>
+
+                        <tr class="total-row">
+                            <td colspan="2"><strong>TOTAL CAPEX</strong></td>
+                            <td class="number" id="totalCapexRow"><strong>$0</strong></td>
+                            <td><strong>Total capital investment</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="section-title">CAPEX BY CATEGORY</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th class="number">Amount ($)</th>
+                            <th class="number">% of Total</th>
+                            <th class="number">$/kW</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Data Center Infrastructure</strong></td>
+                            <td class="number" id="catDataCenter">$0</td>
+                            <td class="number" id="pctDataCenter">0%</td>
+                            <td class="number" id="kwDataCenter">$0</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Gas Infrastructure</strong></td>
+                            <td class="number" id="catGas">$0</td>
+                            <td class="number" id="pctGas">0%</td>
+                            <td class="number" id="kwGas">$0</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Site Development</strong></td>
+                            <td class="number" id="catSite">$0</td>
+                            <td class="number" id="pctSite">0%</td>
+                            <td class="number" id="kwSite">$0</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td><strong>TOTAL</strong></td>
+                            <td class="number" id="catTotalCapex">$0</td>
+                            <td class="number">100%</td>
+                            <td class="number" id="kwTotal">$0</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button onclick="saveStep3()">Continue to OPEX</button>
+            </div>
+
+            <!-- STEP 4: OPEX -->
+            <div id="step4" class="tab-content" role="tabpanel" aria-labelledby="tab4">
+                <div class="info-box">
+                    <div class="info-box-title">Configuration Summary</div>
+                    <div class="info-box-text">
+                        Power: <strong><span id="savedPower4">2.50 MW</span></strong> | 
+                        Miners: <strong><span id="savedMinerQty4">0</span> units</strong> | 
+                        CAPEX: <strong>$<span id="savedCapex4">0</span></strong>
+                    </div>
+                </div>
+                <div class="controls">
+                    <h3>Step 4: Operating Expenditures (OPEX)</h3>
+                    <button onclick="calculateAnnualOpex()">Recalculate OPEX</button>
+                </div>
+                <div class="section-title">OPEX SUMMARY</div>
+                <div class="metrics-grid-4">
+                    <div class="metric-card highlight">
+                        <div class="metric-label">Annual OPEX</div>
+                        <div class="metric-value" id="summaryTotalOpex">$0</div>
+                        <div class="metric-subtext">Per year</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Monthly OPEX</div>
+                        <div class="metric-value" id="summaryMonthlyOpex">$0</div>
+                        <div class="metric-subtext">Average per month</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">OPEX per PH/s</div>
+                        <div class="metric-value" id="summaryOpexPerPH">$0</div>
+                        <div class="metric-subtext">Annual per PH</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">OPEX/CAPEX Ratio</div>
+                        <div class="metric-value" id="summaryOpexCapexRatio">0%</div>
+                        <div class="metric-subtext">Annual OPEX vs CAPEX</div>
+                    </div>
+                </div>
+                <div class="section-title">DETAILED ANNUAL EXPENSES</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Expense Item</th>
+                            <th class="number">Annual ($)</th>
+                            <th class="number">Monthly ($)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="category-header">
+                            <td colspan="4">ENERGY & FUEL</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><strong>Natural Gas</strong></td>
+                            <td class="number">
+                                <input type="number" class="editable-input" id="opex_gas" value="365000" onchange="calculateAnnualOpex()" aria-label="Annual cost of natural gas">
+                            </td>
+                            <td class="number" id="monthly_gas">30,417</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><strong>Fuel Additives</strong></td>
+                            <td class="number">
+                                <input type="number" class="editable-input" id="opex_additives" value="36000" onchange="calculateAnnualOpex()" aria-label="Annual cost of fuel additives">
+                            </td>
+                            <td class="number" id="monthly_additives">3,000</td>
+                        </tr>
+                        <tr class="category-header">
+                            <td colspan="4">MAINTENANCE & REPAIRS</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><strong>Generator Maintenance</strong></td>
+                            <td class="number">
+                                <input type="number" class="editable-input" id="opex_gen_maint" value="60000" onchange="calculateAnnualOpex()" aria-label="Annual generator maintenance cost">
+                            </td>
+                            <td class="number" id="monthly_gen_maint">5,000</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><strong>Miner Maintenance</strong></td>
+                            <td class="number">
+                                <input type="number" class="editable-input" id="opex_miner_maint" value="48000" onchange="calculateAnnualOpex()" aria-label="Annual miner maintenance cost">
+                            </td>
+                            <td class="number" id="monthly_miner_maint">4,000</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><strong>Facility Maintenance</strong></td>
+                            <td class="number">
+                                <input type="number" class="editable-input" id="opex_facility" value="24000" onchange="calculateAnnualOpex()" aria-label="Annual facility maintenance cost">
+                            </td>
+                            <td class="number" id="monthly_facility">2,000</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><strong>Spare Parts</strong></td>
+                            <td class="number">
+                                <input type="number" class="editable-input" id="opex_spares" value="36000" onchange="calculateAnnualOpex()" aria-label="Annual spare parts cost">
+                            </td>
+                            <td class="number" id="monthly_spares">3,000</td>
+                        </tr>
+                        <tr class="category-header">
+                            <td colspan="4">PERSONNEL & LABOR</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><strong>Site Manager</strong></td>
+                            <td class="number">
+                                <input type="number" class="editable-input" id="opex_manager" value="72000" onchange="calculateAnnualOpex()" aria-label="Annual site manager salary">
+                            </td>
+                            <td class="number" id="monthly_manager">6,000</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><strong>Remote Monitoring</strong></td>
+                            <td class="number">
+                                <input type="number" class="editable-input" id="opex_monitoring" value="24000" onchange="calculateAnnualOpex()" aria-label="Annual remote monitoring cost">
+                            </td>
+                            <td class="number" id="monthly_monitoring">2,000</td>
+                        </tr>
+                        <tr class="category-header">
+                            <td colspan="4">CONNECTIVITY & SOFTWARE</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><strong>Internet/Starlink</strong></td>
+                            <td class="number">
+                                <input type="number" class="editable-input" id="opex_internet" value="12000" onchange="calculateAnnualOpex()" aria-label="Annual internet/Starlink cost">
+                            </td>
+                            <td class="number" id="monthly_internet">1,000</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><strong>Mining Pool Fees</strong></td>
+                            <td class="number">
+                                <input type="number" class="editable-input" id="opex_pool" value="18000" onchange="calculateAnnualOpex()" aria-label="Annual mining pool fees">
+                            </td>
+                            <td class="number" id="monthly_pool">1,500</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><strong>Management Software</strong></td>
+                            <td class="number">
+                                <input type="number" class="editable-input" id="opex_software" value="6000" onchange="calculateAnnualOpex()" aria-label="Annual management software cost">
+                            </td>
+                            <td class="number" id="monthly_software">500</td>
+                        </tr>
+                        <tr class="category-header">
+                            <td colspan="4">INSURANCE & COMPLIANCE</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><strong>Equipment Insurance</strong></td>
+                            <td class="number">
+                                <input type="number" class="editable-input" id="opex_insurance" value="30000" onchange="calculateAnnualOpex()" aria-label="Annual equipment insurance">
+                            </td>
+                            <td class="number" id="monthly_insurance">2,500</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><strong>Liability Insurance</strong></td>
+                            <td class="number">
+                                <input type="number" class="editable-input" id="opex_liability" value="18000" onchange="calculateAnnualOpex()" aria-label="Annual liability insurance">
+                            </td>
+                            <td class="number" id="monthly_liability">1,500</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><strong>Permits & Compliance</strong></td>
+                            <td class="number">
+                                <input type="number" class="editable-input" id="opex_permits" value="12000" onchange="calculateAnnualOpex()" aria-label="Annual permits and compliance costs">
+                            </td>
+                            <td class="number" id="monthly_permits">1,000</td>
+                        </tr>
+                        <tr class="category-header">
+                            <td colspan="4">SECURITY & CONTINGENCY</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><strong>Security</strong></td>
+                            <td class="number">
+                                <input type="number" class="editable-input" id="opex_security" value="24000" onchange="calculateAnnualOpex()" aria-label="Annual security costs">
+                            </td>
+                            <td class="number" id="monthly_security">2,000</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><strong>Contingency Fund</strong></td>
+                            <td class="number">
+                                <input type="number" class="editable-input" id="opex_contingency" value="50000" onchange="calculateAnnualOpex()" aria-label="Annual contingency fund">
+                            </td>
+                            <td class="number" id="monthly_contingency">4,167</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td colspan="2"><strong>TOTAL ANNUAL OPEX</strong></td>
+                            <td class="number" id="totalAnnualOpex"><strong>$0</strong></td>
+                            <td class="number" id="totalMonthlyOpex"><strong>$0</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="section-title">OPEX BY CATEGORY</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th class="number">Annual ($)</th>
+                            <th class="number">% of Total</th>
+                            <th class="number">Monthly ($)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Energy & Fuel</strong></td>
+                            <td class="number" id="catEnergyFuel">$0</td>
+                            <td class="number" id="pctEnergyFuel">0%</td>
+                            <td class="number" id="monthlyEnergyFuel">$0</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Maintenance & Repairs</strong></td>
+                            <td class="number" id="catMaintenance">$0</td>
+                            <td class="number" id="pctMaintenance">0%</td>
+                            <td class="number" id="monthlyMaintenance">$0</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Personnel & Labor</strong></td>
+                            <td class="number" id="catPersonnel">$0</td>
+                            <td class="number" id="pctPersonnel">0%</td>
+                            <td class="number" id="monthlyPersonnel">$0</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Connectivity & Software</strong></td>
+                            <td class="number" id="catConnectivity">$0</td>
+                            <td class="number" id="pctConnectivity">0%</td>
+                            <td class="number" id="monthlyConnectivity">$0</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Insurance & Compliance</strong></td>
+                            <td class="number" id="catInsurance">$0</td>
+                            <td class="number" id="pctInsurance">0%</td>
+                            <td class="number" id="monthlyInsurance">$0</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Security & Contingency</strong></td>
+                            <td class="number" id="catSecurity">$0</td>
+                            <td class="number" id="pctSecurity">0%</td>
+                            <td class="number" id="monthlySecurity">$0</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td><strong>TOTAL</strong></td>
+                            <td class="number" id="catTotalOpex">$0</td>
+                            <td class="number">100%</td>
+                            <td class="number" id="catMonthlyTotal"><strong>$0</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button onclick="saveStep4()">Continue to Financial Model</button>
+            </div>
+
+            <!-- STEP 5: PLACEHOLDER -->
+            <div id="step5" class="tab-content" role="tabpanel" aria-labelledby="tab5">
+                <div id="step5-content">Loading Financial Model...</div>
+            </div>
+
+            <!-- STEP 6: PLACEHOLDER -->
+            <div id="step6" class="tab-content" role="tabpanel" aria-labelledby="tab6">
+                <div id="step6-content">Loading Investor Analysis...</div>
+            </div>
+
+            <!-- STEP 7: MONTE CARLO (EMBEDDED) -->
+            <div id="step7" class="tab-content" role="tabpanel" aria-labelledby="tab7">
+                <div id="step7-content">Loading Monte Carlo Simulation...</div>
+            </div>
+
+            <!-- Custom Miner Modal -->
+            <div id="addMinerModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Add Custom Miner</h2>
+                        <span class="close" onclick="closeAddMinerModal()">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <div class="input-grid">
+                            <div class="input-group">
+                                <label for="minerModel">Miner Model Name</label>
+                                <input type="text" id="minerModel" placeholder="e.g., Custom S21 Variant" aria-label="Custom miner model name">
+                            </div>
+                            <div class="input-group">
+                                <label for="minerHashrate">Hashrate (TH/s)</label>
+                                <input type="number" id="minerHashrate" step="1" min="1" aria-label="Hashrate in terahash per second">
+                            </div>
+                            <div class="input-group">
+                                <label for="minerPower">Power Consumption (W)</label>
+                                <input type="number" id="minerPower" step="10" min="100" aria-label="Power consumption in watts">
+                            </div>
+                            <div class="input-group">
+                                <label for="minerCost">Unit Cost ($)</label>
+                                <input type="number" id="minerCost" step="100" min="1000" aria-label="Unit cost in US dollars">
+                            </div>
+                            <div class="input-group">
+                                <label for="minerQuantity">Quantity</label>
+                                <input type="number" id="minerQuantity" value="1" min="1" step="1" aria-label="Number of units">
+                            </div>
+                        </div>
+                        <div style="margin-top: 20px; text-align: right;">
+                            <button onclick="addCustomMiner()" class="btn-success">Add Miner</button>
+                            <button onclick="closeAddMinerModal()" class="btn-secondary">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="status-announcer" role="status" aria-live="polite" aria-atomic="true" class="sr-only"></div>
+    <!-- Chart.js Library for Monte Carlo visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="./js/utils.js"></script>
+    <script src="./js/script.js" defer></script>
+<!--<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99add752f9b655c3',t:'MTc2MjUyOTEwNC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>-->
+</html>
+

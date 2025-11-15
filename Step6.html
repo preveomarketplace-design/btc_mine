@@ -1,0 +1,267 @@
+<!-- Step 6: Investment Decision Analysis (Buy vs Mine) -->
+
+<div class="info-box">
+    <div class="info-box-title">Investment Decision Framework</div>
+    <div class="info-box-text">
+        This analysis helps you decide: <strong>Should I invest $<span id="investorCapitalDisplay">200,000</span> in mining OR just buy BTC?</strong>
+    </div>
+</div>
+
+<div class="controls">
+    <h3>Step 6: Investment Decision Analysis</h3>
+    <button onclick="calculateInvestorAnalysis()" class="btn-primary">Refresh Analysis</button>
+</div>
+
+<!-- THE CORE QUESTION: HERO SECTION -->
+<div class="section-title">THE CORE INVESTMENT DECISION</div>
+
+<div style="background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%); border: 2px solid #dee2e6; border-radius: 8px; padding: 30px; margin-bottom: 30px;">
+    <h3 style="text-align: center; font-size: 16px; font-weight: 600; color: #2c3e50; margin: 0 0 25px 0;">
+        YOUR $<span id="heroInvestmentAmount">200,000</span> INVESTMENT
+    </h3>
+    
+    <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 20px; align-items: center;">
+        <!-- Option A: Buy BTC -->
+        <div style="background: #fff3cd; border: 3px solid #ffc107; border-radius: 8px; padding: 25px; text-align: center;">
+            <div style="font-size: 13px; font-weight: 600; color: #856404; margin-bottom: 15px; text-transform: uppercase;">
+                OPTION A: BUY BTC TODAY
+            </div>
+            <div style="font-size: 32px; font-weight: 700; color: #f39c12; margin-bottom: 10px;" id="heroBuyBtc">
+                0.0000 BTC
+            </div>
+            <div style="font-size: 11px; color: #6c757d; margin-bottom: 15px;">
+                @ $<span id="heroBuyPrice">104,337</span> per BTC
+            </div>
+            <div style="background: white; padding: 12px; border-radius: 4px; margin-top: 10px;">
+                <div style="font-size: 10px; color: #6c757d; margin-bottom: 4px;">5-YEAR VALUE</div>
+                <div style="font-size: 20px; font-weight: 700; color: #2c3e50;" id="heroBuyValue">$0</div>
+            </div>
+            <div style="margin-top: 12px; padding: 8px; background: rgba(255, 255, 255, 0.7); border-radius: 4px;">
+                <div style="font-size: 10px; color: #6c757d;">ROI</div>
+                <div style="font-size: 16px; font-weight: 600;" id="heroBuyRoi">0%</div>
+            </div>
+        </div>
+
+        <!-- VS Divider -->
+        <div style="text-align: center;">
+            <div style="font-size: 24px; font-weight: 700; color: #adb5bd;">VS</div>
+        </div>
+
+        <!-- Option B: Mine -->
+        <div style="background: #d4edda; border: 3px solid #2d6a4f; border-radius: 8px; padding: 25px; text-align: center;">
+            <div style="font-size: 13px; font-weight: 600; color: #155724; margin-bottom: 15px; text-transform: uppercase;">
+                OPTION B: INVEST IN MINING
+            </div>
+            <div style="font-size: 32px; font-weight: 700; color: #2d6a4f; margin-bottom: 10px;" id="heroMineBtc">
+                0.0000 BTC
+            </div>
+            <div style="font-size: 11px; color: #6c757d; margin-bottom: 15px;">
+                <span id="heroMineUnits">20.0</span>% of LP pool @ <span id="heroMineShare">12.0</span>% profit share
+            </div>
+            <div style="background: white; padding: 12px; border-radius: 4px; margin-top: 10px;">
+                <div style="font-size: 10px; color: #6c757d; margin-bottom: 4px;">5-YEAR VALUE</div>
+                <div style="font-size: 20px; font-weight: 700; color: #2c3e50;" id="heroMineValue">$0</div>
+            </div>
+            <div style="margin-top: 12px; padding: 8px; background: rgba(255, 255, 255, 0.7); border-radius: 4px;">
+                <div style="font-size: 10px; color: #6c757d;">ROI</div>
+                <div style="font-size: 16px; font-weight: 600;" id="heroMineRoi">0%</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Winner Banner -->
+    <div id="heroWinnerBanner" style="margin-top: 25px; padding: 20px; border-radius: 8px; text-align: center; background: #f8f9fa; border: 2px solid #dee2e6;">
+        <div style="font-size: 14px; font-weight: 600; color: #6c757d; margin-bottom: 8px;">RECOMMENDATION</div>
+        <div style="font-size: 24px; font-weight: 700; color: #2c3e50;" id="heroWinnerText">RUN ANALYSIS</div>
+        <div style="font-size: 12px; color: #6c757d; margin-top: 8px;" id="heroWinnerReason">Click "Refresh Analysis" to see recommendation</div>
+    </div>
+</div>
+
+<!-- SCENARIO MATRIX -->
+<div class="section-title">SCENARIO ANALYSIS: BUY vs MINE ACROSS BTC PRICES</div>
+
+<div style="background: #e8f4fd; border-left: 4px solid #3498db; padding: 12px 15px; margin-bottom: 15px; font-size: 11px; color: #495057;">
+    <strong>How to read:</strong> This table shows which strategy wins at different BTC prices. Green = Mining wins, Yellow = Buy wins, Gray = Similar results.
+</div>
+
+<table id="scenarioComparisonTable">
+    <thead>
+        <tr>
+            <th>BTC Price</th>
+            <th class="number">Buy: BTC Owned</th>
+            <th class="number">Buy: 5Y Value</th>
+            <th class="number">Buy: ROI</th>
+            <th class="number">Mine: BTC Earned</th>
+            <th class="number">Mine: 5Y Value</th>
+            <th class="number">Mine: ROI</th>
+            <th>Winner</th>
+            <th class="number">Advantage</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td colspan="9" class="text-center text-muted">Run analysis to see scenarios</td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- EXIT STRATEGY YEAR-BY-YEAR -->
+<div class="section-title">EXIT STRATEGY ANALYSIS: WHEN SHOULD YOU EXIT?</div>
+
+<div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px 15px; margin-bottom: 15px; font-size: 11px; color: #856404;">
+    <strong>Question:</strong> If you need to exit early, which strategy performs better in each year?
+</div>
+
+<!-- Mine Exit Table -->
+<div style="background: #d4edda; border-left: 4px solid #2d6a4f; padding: 8px 12px; margin-bottom: 8px; font-size: 11px; font-weight: 600; color: #155724;">
+    MINING STRATEGY EXIT OPTIONS
+</div>
+<table id="exitStrategyTableMine">
+    <thead>
+        <tr>
+            <th>Exit Year</th>
+            <th class="number">LP BTC Earned</th>
+            <th class="number">BTC Price</th>
+            <th class="number">BTC Value</th>
+            <th class="number">Equipment Share</th>
+            <th class="number">Total Recovery</th>
+            <th class="number">Net Return</th>
+            <th class="number">ROI</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td colspan="8" class="text-center text-muted">Run analysis for mining exit options</td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- Buy & Hold Exit Table -->
+<div style="background: #fff3cd; border-left: 4px solid #f39c12; padding: 8px 12px; margin: 25px 0 8px 0; font-size: 11px; font-weight: 600; color: #856404;">
+    BUY & HOLD STRATEGY EXIT OPTIONS
+</div>
+<table id="exitStrategyTableHold">
+    <thead>
+        <tr>
+            <th>Exit Year</th>
+            <th class="number">BTC Owned</th>
+            <th class="number">BTC Price</th>
+            <th class="number">BTC Value</th>
+            <th class="number">Equipment Share</th>
+            <th class="number">Total Recovery</th>
+            <th class="number">Net Return</th>
+            <th class="number">ROI</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td colspan="8" class="text-center text-muted">Run analysis for buy & hold exit options</td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- Year-by-Year Winners -->
+<div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-top: 25px;">
+    <div class="metric-card" style="border-left: 4px solid #2d6a4f;">
+        <div class="metric-label">Year 1 Winner</div>
+        <div class="metric-value" id="winnerY1" style="font-size: 16px;">-</div>
+    </div>
+    <div class="metric-card" style="border-left: 4px solid #2d6a4f;">
+        <div class="metric-label">Year 2 Winner</div>
+        <div class="metric-value" id="winnerY2" style="font-size: 16px;">-</div>
+    </div>
+    <div class="metric-card" style="border-left: 4px solid #2d6a4f;">
+        <div class="metric-label">Year 3 Winner</div>
+        <div class="metric-value" id="winnerY3" style="font-size: 16px;">-</div>
+    </div>
+    <div class="metric-card" style="border-left: 4px solid #2d6a4f;">
+        <div class="metric-label">Year 4 Winner</div>
+        <div class="metric-value" id="winnerY4" style="font-size: 16px;">-</div>
+    </div>
+    <div class="metric-card" style="border-left: 4px solid #2d6a4f;">
+        <div class="metric-label">Year 5 Winner</div>
+        <div class="metric-value" id="winnerY5" style="font-size: 16px;">-</div>
+    </div>
+</div>
+
+<!-- RISK DASHBOARD -->
+<div class="section-title">RISK FACTORS & SENSITIVITY</div>
+
+<div class="metrics-grid-4">
+    <div class="metric-card warning">
+        <div class="metric-label">Break-Even BTC Price</div>
+        <div class="metric-value" id="breakEvenPrice">$0</div>
+        <div class="metric-subtext">Mining = Buy & Hold</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-label">Uptime Impact</div>
+        <div class="metric-value" id="uptimeImpact">$0</div>
+        <div class="metric-subtext">95% vs 85% uptime</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-label">Difficulty Impact</div>
+        <div class="metric-value" id="difficultyImpact">$0</div>
+        <div class="metric-subtext">5% vs 10% growth</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-label">Capital Efficiency</div>
+        <div class="metric-value" id="capexEfficiency">$0/PH</div>
+        <div class="metric-subtext">CAPEX per hashrate</div>
+    </div>
+</div>
+
+<!-- SENSITIVITY TABLE -->
+<div class="section-title">KEY SENSITIVITIES</div>
+<table id="sensitivityTable">
+    <thead>
+        <tr>
+            <th>Variable</th>
+            <th>Base Case</th>
+            <th class="number">-20% Impact</th>
+            <th class="number">+50% Impact</th>
+            <th class="number">Total Swing</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td colspan="5" class="text-center text-muted">Run analysis for sensitivities</td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- FINAL RECOMMENDATION -->
+<div class="section-title">INVESTMENT RECOMMENDATION</div>
+
+<div id="recommendationBox" style="padding: 25px; border-radius: 8px; margin-bottom: 25px; border: 3px solid #dee2e6; background: #f8f9fa;">
+    <div id="recommendationText" style="font-size: 13px; line-height: 1.6; color: #495057;">
+        <p style="margin: 0;">Run the analysis to generate a personalized investment recommendation based on your inputs.</p>
+    </div>
+</div>
+
+<!-- KEY ASSUMPTIONS SUMMARY -->
+<div class="section-title">YOUR CURRENT ASSUMPTIONS</div>
+
+<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 25px;">
+    <div style="background: white; border: 1px solid #dee2e6; border-radius: 4px; padding: 15px;">
+        <div style="font-size: 10px; color: #6c757d; margin-bottom: 8px; text-transform: uppercase;">Investment Amount</div>
+        <div style="font-size: 18px; font-weight: 700; color: #2c3e50;">$<span id="summaryInvestment">200,000</span></div>
+    </div>
+    <div style="background: white; border: 1px solid #dee2e6; border-radius: 4px; padding: 15px;">
+        <div style="font-size: 10px; color: #6c757d; margin-bottom: 8px; text-transform: uppercase;">GP/LP Split</div>
+        <div style="font-size: 18px; font-weight: 700; color: #2c3e50;"><span id="summaryGpLp">40/60</span></div>
+    </div>
+    <div style="background: white; border: 1px solid #dee2e6; border-radius: 4px; padding: 15px;">
+        <div style="font-size: 10px; color: #6c757d; margin-bottom: 8px; text-transform: uppercase;">BTC Price (Y1)</div>
+        <div style="font-size: 18px; font-weight: 700; color: #2c3e50;">$<span id="summaryBtcPrice">104,337</span></div>
+    </div>
+</div>
+
+<div style="text-align: center; padding: 20px; background: #e8f4fd; border-radius: 4px; border: 1px solid #bee5eb;">
+    <p style="font-size: 11px; color: #0c5460; margin: 0; line-height: 1.5;">
+        <strong>Pro Tip:</strong> Want to adjust assumptions? Go back to Step 5 to change BTC prices, GP/LP split, or investment amount, then return here to see updated analysis.
+    </p>
+</div>
+
+<button onclick="exportReport()" class="btn-success" style="margin-top: 20px;">Export Investment Report (PDF)</button>
+
+<script src="./js/investor.js" defer></script>

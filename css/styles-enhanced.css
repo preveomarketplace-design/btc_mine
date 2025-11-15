@@ -1,0 +1,199 @@
+/* styles-enhanced.css - CSS Additions for Refactored App */
+/* Append this to the end of your existing styles.css */
+
+/* ============================================================================ */
+/* ENHANCED FEATURES - Added during refactoring */
+/* ============================================================================ */
+
+/* Loading State */
+.loading-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6c757d;
+}
+
+.loading-state p {
+    font-size: 14px;
+    margin: 10px 0;
+}
+
+.loading-state::before {
+    content: "â³";
+    display: block;
+    font-size: 48px;
+    margin-bottom: 20px;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+}
+
+/* Input Validation States */
+input.invalid {
+    border-color: #e74c3c !important;
+    background-color: #fef2f2;
+}
+
+input.valid {
+    border-color: #2d6a4f !important;
+}
+
+/* Enhanced Print Styles */
+@media print {
+    @page {
+        margin: 0.5in;
+        size: letter;
+    }
+    
+    /* Hide navigation and interactive elements */
+    .tab-navigation,
+    .controls,
+    button,
+    .action-btn,
+    .no-print,
+    .modal {
+        display: none !important;
+    }
+    
+    /* Optimize table printing */
+    table {
+        page-break-inside: avoid;
+        border-collapse: collapse;
+    }
+    
+    tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+    }
+    
+    thead {
+        display: table-header-group;
+    }
+    
+    /* Ensure metrics are visible */
+    .metrics-grid,
+    .metrics-grid-4 {
+        page-break-inside: avoid;
+        display: block !important;
+    }
+    
+    .metric-card {
+        display: inline-block;
+        width: 48%;
+        margin: 1%;
+        vertical-align: top;
+        page-break-inside: avoid;
+    }
+    
+    /* Preserve colors for important info */
+    .highlight-row {
+        background: #e8f5e9 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    
+    .total-row {
+        background: #e8f5e9 !important;
+        border-top: 2px solid #2d6a4f !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    
+    /* Ensure section titles are clear */
+    .section-title {
+        page-break-after: avoid;
+        margin-top: 30px;
+        border-bottom: 2px solid #34495e !important;
+    }
+    
+    /* Prevent orphaned headers */
+    h1, h2, h3, h4, h5, h6 {
+        page-break-after: avoid;
+    }
+    
+    /* Info boxes should stay together */
+    .info-box,
+    .alert-warning {
+        page-break-inside: avoid;
+    }
+    
+    /* Compact spacing for print */
+    .page {
+        padding: 0;
+        margin: 0;
+        box-shadow: none;
+        border: none;
+    }
+    
+    /* Add page breaks between major sections */
+    #step5,
+    #step6 {
+        page-break-before: always;
+    }
+}
+
+/* Accessibility Improvements */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* Focus visible for keyboard navigation */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+    outline: 2px solid #34495e;
+    outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .metric-card {
+        border: 2px solid currentColor;
+    }
+    
+    button {
+        border: 2px solid currentColor;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Responsive improvements */
+@media (max-width: 480px) {
+    body {
+        padding: 10px;
+    }
+    
+    .page {
+        padding: 20px;
+    }
+    
+    h1 {
+        font-size: 20px;
+    }
+    
+    .metric-value {
+        font-size: 18px;
+    }
+    
+    table {
+        font-size: 9px;
+    }
+}

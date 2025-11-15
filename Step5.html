@@ -1,0 +1,529 @@
+<!-- Step 5: Financial Model & Proforma Projections -->
+
+<div class="info-box">
+    <div class="info-box-title">Pro Forma Financial Analysis</div>
+    <div class="info-box-text">
+        This section provides <strong>industry-standard financial projections</strong> including 5-year Income Statement, Cash Flow Analysis, 
+        and key investment metrics. All projections are based on your CAPEX, OPEX, and operational parameters from previous steps.
+    </div>
+</div>
+
+<div class="controls">
+    <h3>Step 5: Investment Structure & Financial Projections</h3>
+    
+    <!-- PROJECT SUMMARY -->
+    <div style="background: #e8f4fd; border: 2px solid #3498db; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+        <h4 style="margin: 0 0 15px 0; font-size: 14px; color: #2c3e50;">Project Summary</h4>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+            <div>
+                <label style="display: block; font-size: 10px; color: #6c757d; margin-bottom: 4px;">Total CAPEX</label>
+                <div style="font-size: 18px; font-weight: 700; color: #2c3e50;">$<span id="savedCapex5">0</span></div>
+            </div>
+            <div>
+                <label style="display: block; font-size: 10px; color: #6c757d; margin-bottom: 4px;">Annual OPEX</label>
+                <div style="font-size: 18px; font-weight: 700; color: #2c3e50;">$<span id="savedOpex5">0</span></div>
+            </div>
+            <div>
+                <label style="display: block; font-size: 10px; color: #6c757d; margin-bottom: 4px;">Total Hashrate</label>
+                <div style="font-size: 18px; font-weight: 700; color: #2c3e50;"><span id="savedHashrate5">0</span></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- BTC PRICE PROJECTION INPUTS -->
+    <div style="background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+        <h4 style="margin: 0 0 15px 0; font-size: 14px; color: #856404;">Bitcoin Price Projections (5-Year)</h4>
+        
+        <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px;">
+            <div class="input-group">
+                <label for="btcPrice">Current BTC Price ($)</label>
+                <input type="number" id="btcPrice" value="100000" step="1000" min="10000" 
+                       onchange="calculateInvestmentReturns()" style="width: 100%;">
+                <small style="display: block; margin-top: 3px; font-size: 9px; color: #6c757d;">
+                    Today's price
+                </small>
+            </div>
+            
+            <div class="input-group">
+                <label for="btcPriceY1">Year 1 ($)</label>
+                <input type="number" id="btcPriceY1" value="110000" step="1000" min="10000" 
+                       onchange="calculateInvestmentReturns()" style="width: 100%;">
+                <small style="display: block; margin-top: 3px; font-size: 9px; color: #6c757d;">
+                    Y1 projection
+                </small>
+            </div>
+            
+            <div class="input-group">
+                <label for="btcPriceY2">Year 2 ($)</label>
+                <input type="number" id="btcPriceY2" value="120000" step="1000" min="10000" 
+                       onchange="calculateInvestmentReturns()" style="width: 100%;">
+                <small style="display: block; margin-top: 3px; font-size: 9px; color: #6c757d;">
+                    Y2 projection
+                </small>
+            </div>
+            
+            <div class="input-group">
+                <label for="btcPriceY3">Year 3 ($)</label>
+                <input type="number" id="btcPriceY3" value="130000" step="1000" min="10000" 
+                       onchange="calculateInvestmentReturns()" style="width: 100%;">
+                <small style="display: block; margin-top: 3px; font-size: 9px; color: #6c757d;">
+                    Y3 projection
+                </small>
+            </div>
+            
+            <div class="input-group">
+                <label for="btcPriceY4">Year 4 ($)</label>
+                <input type="number" id="btcPriceY4" value="140000" step="1000" min="10000" 
+                       onchange="calculateInvestmentReturns()" style="width: 100%;">
+                <small style="display: block; margin-top: 3px; font-size: 9px; color: #6c757d;">
+                    Y4 projection
+                </small>
+            </div>
+            
+            <div class="input-group">
+                <label for="btcPriceY5">Year 5 ($)</label>
+                <input type="number" id="btcPriceY5" value="150000" step="1000" min="10000" 
+                       onchange="calculateInvestmentReturns()" style="width: 100%;">
+                <small style="display: block; margin-top: 3px; font-size: 9px; color: #6c757d;">
+                    Y5 projection
+                </small>
+            </div>
+        </div>
+        
+        <div style="margin-top: 15px; padding: 12px; background: #f8f9fa; border-radius: 4px; font-size: 11px; color: #495057;">
+            <strong>💡 Tip:</strong> Adjust these prices to model different BTC appreciation scenarios. 
+            These projections directly impact revenue calculations in the pro forma statements below.
+        </div>
+    </div>
+    
+    <!-- INVESTMENT STRUCTURE INPUTS -->
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
+        <div class="input-group">
+            <label for="investorCapital">Your Investment ($)</label>
+            <input type="number" id="investorCapital" value="200000" step="10000" min="0" 
+                   onchange="calculateInvestmentReturns()" style="width: 100%;">
+            <small style="display: block; margin-top: 3px; font-size: 9px; color: #6c757d;">
+                Your capital contribution
+            </small>
+        </div>
+        
+        <div class="input-group">
+            <label for="totalLpCapital">Total LP Capital ($)</label>
+            <input type="number" id="totalLpCapital" value="1000000" step="10000" min="0" 
+                   onchange="calculateInvestmentReturns()" style="width: 100%;">
+            <small style="display: block; margin-top: 3px; font-size: 9px; color: #6c757d;">
+                Total Limited Partner capital
+            </small>
+        </div>
+        
+        <div class="input-group">
+            <label for="gpLpSplit">GP/LP Profit Split</label>
+            <select id="gpLpSplit" onchange="calculateInvestmentReturns()" style="width: 100%; padding: 8px;">
+                <option value="20-80">20% GP / 80% LP</option>
+                <option value="30-70">30% GP / 70% LP</option>
+                <option value="40-60" selected>40% GP / 60% LP</option>
+                <option value="50-50">50% GP / 50% GP</option>
+            </select>
+            <small style="display: block; margin-top: 3px; font-size: 9px; color: #6c757d;">
+                Profit sharing structure
+            </small>
+        </div>
+    </div>
+    
+    <button onclick="calculateInvestmentReturns()" class="btn-primary">Calculate Financial Projections</button>
+</div>
+
+<!-- ========================================= -->
+<!-- PRO FORMA INCOME STATEMENT -->
+<!-- ========================================= -->
+<div class="section-title">PRO FORMA INCOME STATEMENT (5-YEAR PROJECTION)</div>
+
+<table id="incomeStatementTable">
+    <thead>
+        <tr>
+            <th>Line Item</th>
+            <th class="number">Year 1</th>
+            <th class="number">Year 2</th>
+            <th class="number">Year 3</th>
+            <th class="number">Year 4</th>
+            <th class="number">Year 5</th>
+            <th class="number">Total (5Y)</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr style="background: #f8f9fa; font-weight: 600;">
+            <td><strong>REVENUE</strong></td>
+            <td class="number" id="rev_y1">$0</td>
+            <td class="number" id="rev_y2">$0</td>
+            <td class="number" id="rev_y3">$0</td>
+            <td class="number" id="rev_y4">$0</td>
+            <td class="number" id="rev_y5">$0</td>
+            <td class="number" id="rev_total">$0</td>
+        </tr>
+        <tr>
+            <td style="padding-left: 25px;">BTC Mined (BTC)</td>
+            <td class="number" id="btc_y1">0</td>
+            <td class="number" id="btc_y2">0</td>
+            <td class="number" id="btc_y3">0</td>
+            <td class="number" id="btc_y4">0</td>
+            <td class="number" id="btc_y5">0</td>
+            <td class="number" id="btc_total">0</td>
+        </tr>
+        <tr>
+            <td style="padding-left: 25px;">BTC Price ($/BTC)</td>
+            <td class="number" id="price_y1">$0</td>
+            <td class="number" id="price_y2">$0</td>
+            <td class="number" id="price_y3">$0</td>
+            <td class="number" id="price_y4">$0</td>
+            <td class="number" id="price_y5">$0</td>
+            <td class="number">-</td>
+        </tr>
+        <tr style="background: #fff3cd;">
+            <td><strong>OPERATING EXPENSES</strong></td>
+            <td class="number negative" id="opex_y1">($0)</td>
+            <td class="number negative" id="opex_y2">($0)</td>
+            <td class="number negative" id="opex_y3">($0)</td>
+            <td class="number negative" id="opex_y4">($0)</td>
+            <td class="number negative" id="opex_y5">($0)</td>
+            <td class="number negative" id="opex_total">($0)</td>
+        </tr>
+        <tr>
+            <td style="padding-left: 25px;">Energy & Fuel</td>
+            <td class="number negative" id="opex_energy_y1">($0)</td>
+            <td class="number negative" id="opex_energy_y2">($0)</td>
+            <td class="number negative" id="opex_energy_y3">($0)</td>
+            <td class="number negative" id="opex_energy_y4">($0)</td>
+            <td class="number negative" id="opex_energy_y5">($0)</td>
+            <td class="number negative" id="opex_energy_total">($0)</td>
+        </tr>
+        <tr>
+            <td style="padding-left: 25px;">Maintenance & Operations</td>
+            <td class="number negative" id="opex_maint_y1">($0)</td>
+            <td class="number negative" id="opex_maint_y2">($0)</td>
+            <td class="number negative" id="opex_maint_y3">($0)</td>
+            <td class="number negative" id="opex_maint_y4">($0)</td>
+            <td class="number negative" id="opex_maint_y5">($0)</td>
+            <td class="number negative" id="opex_maint_total">($0)</td>
+        </tr>
+        <tr class="total-row">
+            <td><strong>EBITDA</strong></td>
+            <td class="number" id="ebitda_y1">$0</td>
+            <td class="number" id="ebitda_y2">$0</td>
+            <td class="number" id="ebitda_y3">$0</td>
+            <td class="number" id="ebitda_y4">$0</td>
+            <td class="number" id="ebitda_y5">$0</td>
+            <td class="number" id="ebitda_total">$0</td>
+        </tr>
+        <tr>
+            <td><strong>EBITDA Margin (%)</strong></td>
+            <td class="number" id="margin_y1">0%</td>
+            <td class="number" id="margin_y2">0%</td>
+            <td class="number" id="margin_y3">0%</td>
+            <td class="number" id="margin_y4">0%</td>
+            <td class="number" id="margin_y5">0%</td>
+            <td class="number" id="margin_avg">0%</td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- ========================================= -->
+<!-- PRO FORMA CHARTS -->
+<!-- ========================================= -->
+<div class="section-title">FINANCIAL PERFORMANCE CHARTS</div>
+
+<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 30px;">
+    <!-- Revenue & EBITDA Trend -->
+    <div style="background: white; border: 2px solid #3498db; border-radius: 8px; padding: 20px;">
+        <h4 style="margin: 0 0 15px 0; font-size: 13px; color: #2c3e50; text-align: center; font-weight: 600;">
+            Revenue & EBITDA Projection
+        </h4>
+        <canvas id="revenueEbitdaChart" style="max-height: 300px;"></canvas>
+    </div>
+    
+    <!-- OPEX Breakdown Over Time -->
+    <div style="background: white; border: 2px solid #e74c3c; border-radius: 8px; padding: 20px;">
+        <h4 style="margin: 0 0 15px 0; font-size: 13px; color: #2c3e50; text-align: center; font-weight: 600;">
+            OPEX Breakdown by Year
+        </h4>
+        <canvas id="opexBreakdownChart" style="max-height: 300px;"></canvas>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 30px;">
+    <!-- Cumulative Cash Flow -->
+    <div style="background: white; border: 2px solid #2d6a4f; border-radius: 8px; padding: 20px;">
+        <h4 style="margin: 0 0 15px 0; font-size: 13px; color: #2c3e50; text-align: center; font-weight: 600;">
+            Cumulative Cash Flow
+        </h4>
+        <canvas id="cumulativeCashFlowChart" style="max-height: 300px;"></canvas>
+    </div>
+    
+    <!-- EBITDA Margin Trend -->
+    <div style="background: white; border: 2px solid #9b59b6; border-radius: 8px; padding: 20px;">
+        <h4 style="margin: 0 0 15px 0; font-size: 13px; color: #2c3e50; text-align: center; font-weight: 600;">
+            EBITDA Margin Trend
+        </h4>
+        <canvas id="ebitdaMarginChart" style="max-height: 300px;"></canvas>
+    </div>
+</div>
+
+<!-- ========================================= -->
+<!-- CASH FLOW STATEMENT -->
+<!-- ========================================= -->
+<div class="section-title">PRO FORMA CASH FLOW STATEMENT</div>
+
+<table id="cashFlowTable">
+    <thead>
+        <tr>
+            <th>Cash Flow Item</th>
+            <th class="number">Year 1</th>
+            <th class="number">Year 2</th>
+            <th class="number">Year 3</th>
+            <th class="number">Year 4</th>
+            <th class="number">Year 5</th>
+            <th class="number">Total (5Y)</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr style="background: #d4edda;">
+            <td><strong>Operating Cash Flow (EBITDA)</strong></td>
+            <td class="number positive" id="cf_ebitda_y1">$0</td>
+            <td class="number positive" id="cf_ebitda_y2">$0</td>
+            <td class="number positive" id="cf_ebitda_y3">$0</td>
+            <td class="number positive" id="cf_ebitda_y4">$0</td>
+            <td class="number positive" id="cf_ebitda_y5">$0</td>
+            <td class="number positive" id="cf_ebitda_total">$0</td>
+        </tr>
+        <tr style="background: #fef2f2;">
+            <td><strong>Capital Expenditures (CAPEX)</strong></td>
+            <td class="number negative" id="cf_capex_y1">($0)</td>
+            <td class="number negative" id="cf_capex_y2">($0)</td>
+            <td class="number negative" id="cf_capex_y3">($0)</td>
+            <td class="number negative" id="cf_capex_y4">($0)</td>
+            <td class="number negative" id="cf_capex_y5">($0)</td>
+            <td class="number negative" id="cf_capex_total">($0)</td>
+        </tr>
+        <tr style="background: #e8f5e9;">
+            <td><strong>Equipment Residual Value</strong></td>
+            <td class="number" id="cf_residual_y1">$0</td>
+            <td class="number" id="cf_residual_y2">$0</td>
+            <td class="number" id="cf_residual_y3">$0</td>
+            <td class="number" id="cf_residual_y4">$0</td>
+            <td class="number positive" id="cf_residual_y5">$0</td>
+            <td class="number positive" id="cf_residual_total">$0</td>
+        </tr>
+        <tr class="total-row">
+            <td><strong>FREE CASH FLOW</strong></td>
+            <td class="number" id="fcf_y1">$0</td>
+            <td class="number" id="fcf_y2">$0</td>
+            <td class="number" id="fcf_y3">$0</td>
+            <td class="number" id="fcf_y4">$0</td>
+            <td class="number" id="fcf_y5">$0</td>
+            <td class="number" id="fcf_total">$0</td>
+        </tr>
+        <tr class="highlight-row">
+            <td><strong>CUMULATIVE CASH FLOW</strong></td>
+            <td class="number" id="cum_cf_y1">$0</td>
+            <td class="number" id="cum_cf_y2">$0</td>
+            <td class="number" id="cum_cf_y3">$0</td>
+            <td class="number" id="cum_cf_y4">$0</td>
+            <td class="number" id="cum_cf_y5">$0</td>
+            <td class="number">-</td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- ========================================= -->
+<!-- KEY FINANCIAL METRICS DASHBOARD -->
+<!-- ========================================= -->
+<div class="section-title">KEY INVESTMENT METRICS</div>
+
+<div class="metrics-grid-4" style="margin-bottom: 30px;">
+    <div class="metric-card">
+        <div class="metric-label">5-Year IRR</div>
+        <div class="metric-value" id="metric_irr">0%</div>
+        <div class="metric-subtext">Internal Rate of Return</div>
+    </div>
+    
+    <div class="metric-card">
+        <div class="metric-label">Project NPV</div>
+        <div class="metric-value" id="metric_npv">$0</div>
+        <div class="metric-subtext">@ 15% discount rate</div>
+    </div>
+    
+    <div class="metric-card">
+        <div class="metric-label">Payback Period</div>
+        <div class="metric-value" id="metric_payback">0.0 yrs</div>
+        <div class="metric-subtext">Time to recover CAPEX</div>
+    </div>
+    
+    <div class="metric-card">
+        <div class="metric-label">Total ROI</div>
+        <div class="metric-value" id="metric_roi">0%</div>
+        <div class="metric-subtext">5-year return on investment</div>
+    </div>
+</div>
+
+<!-- ========================================= -->
+<!-- INVESTMENT STRUCTURE & RETURNS -->
+<!-- ========================================= -->
+<div class="section-title">INVESTMENT STRUCTURE & PARTNER RETURNS</div>
+
+<div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+    <h4 style="margin: 0 0 15px 0; font-size: 13px; color: #2c3e50;">Capital Structure</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Partner</th>
+                <th class="number">Capital</th>
+                <th class="number">% of Total</th>
+                <th class="number">Profit Share</th>
+            </tr>
+        </thead>
+        <tbody id="investmentStructureTable">
+            <tr><td colspan="4">Calculate to view structure</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- LP Returns Section -->
+<div class="section-title">LIMITED PARTNER (LP) RETURNS</div>
+<div class="metrics-grid-3">
+    <div class="metric-card">
+        <div class="metric-label">Your Investment</div>
+        <div class="metric-value" id="lpInvestment">$0</div>
+        <div class="metric-subtext">Initial capital</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-label">5-Year Return</div>
+        <div class="metric-value positive" id="lpReturn">$0</div>
+        <div class="metric-subtext">Net profit after 5 years</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-label">LP ROI</div>
+        <div class="metric-value positive" id="lpROI">0%</div>
+        <div class="metric-subtext">Return on investment</div>
+    </div>
+</div>
+
+<!-- LP Cash Flow Table -->
+<div style="margin-top: 20px;">
+    <table id="lpCashFlowTable">
+        <thead>
+            <tr>
+                <th>Year</th>
+                <th class="number">EBITDA Share</th>
+                <th class="number">OPEX Share</th>
+                <th class="number">Net Cash Flow</th>
+                <th class="number">Cumulative</th>
+            </tr>
+        </thead>
+        <tbody id="lpCashFlowBody">
+            <tr><td colspan="5">Calculate to view LP cash flows</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- GP Returns Section -->
+<div class="section-title">GENERAL PARTNER (GP) RETURNS</div>
+<div class="metrics-grid-3">
+    <div class="metric-card">
+        <div class="metric-label">GP Share</div>
+        <div class="metric-value" id="gpShare">0%</div>
+        <div class="metric-subtext">Profit sharing %</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-label">5-Year Profit</div>
+        <div class="metric-value positive" id="gpProfit">$0</div>
+        <div class="metric-subtext">Total GP earnings</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-label">GP/LP Ratio</div>
+        <div class="metric-value" id="gpLpRatio">0:0</div>
+        <div class="metric-subtext">Profit split ratio</div>
+    </div>
+</div>
+
+<!-- ========================================= -->
+<!-- SENSITIVITY ANALYSIS -->
+<!-- ========================================= -->
+<div class="section-title">SENSITIVITY ANALYSIS: IRR BY BTC PRICE & HASH RATE</div>
+
+<table id="sensitivityTable">
+    <thead>
+        <tr>
+            <th>BTC Price ↓ / Hash Rate →</th>
+            <th class="number">Base (100%)</th>
+            <th class="number">+20%</th>
+            <th class="number">+50%</th>
+            <th class="number">-20%</th>
+            <th class="number">-50%</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>$150,000</strong></td>
+            <td class="number" id="sens_150_100">0%</td>
+            <td class="number" id="sens_150_120">0%</td>
+            <td class="number" id="sens_150_150">0%</td>
+            <td class="number" id="sens_150_80">0%</td>
+            <td class="number" id="sens_150_50">0%</td>
+        </tr>
+        <tr class="highlight-row">
+            <td><strong>$120,000 (Base)</strong></td>
+            <td class="number" id="sens_120_100">0%</td>
+            <td class="number" id="sens_120_120">0%</td>
+            <td class="number" id="sens_120_150">0%</td>
+            <td class="number" id="sens_120_80">0%</td>
+            <td class="number" id="sens_120_50">0%</td>
+        </tr>
+        <tr>
+            <td><strong>$100,000</strong></td>
+            <td class="number" id="sens_100_100">0%</td>
+            <td class="number" id="sens_100_120">0%</td>
+            <td class="number" id="sens_100_150">0%</td>
+            <td class="number" id="sens_100_80">0%</td>
+            <td class="number" id="sens_100_50">0%</td>
+        </tr>
+        <tr>
+            <td><strong>$80,000</strong></td>
+            <td class="number" id="sens_80_100">0%</td>
+            <td class="number" id="sens_80_120">0%</td>
+            <td class="number" id="sens_80_150">0%</td>
+            <td class="number" id="sens_80_80">0%</td>
+            <td class="number" id="sens_80_50">0%</td>
+        </tr>
+        <tr>
+            <td><strong>$60,000</strong></td>
+            <td class="number" id="sens_60_100">0%</td>
+            <td class="number" id="sens_60_120">0%</td>
+            <td class="number" id="sens_60_150">0%</td>
+            <td class="number" id="sens_60_80">0%</td>
+            <td class="number" id="sens_60_50">0%</td>
+        </tr>
+    </tbody>
+</table>
+
+<div style="margin-top: 10px; padding: 12px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; font-size: 11px;">
+    <strong>💡 Reading the Table:</strong> Green cells indicate positive IRR, red cells indicate negative IRR. 
+    The table shows how project returns change with different BTC prices and hash rate efficiency scenarios.
+</div>
+
+<!-- ========================================= -->
+<!-- WATERFALL VISUALIZATION -->
+<!-- ========================================= -->
+<div class="section-title">CASH FLOW WATERFALL</div>
+
+<div id="waterfallContainer" style="background: white; border: 1px solid #dee2e6; border-radius: 8px; padding: 25px; margin-bottom: 30px;">
+    <canvas id="waterfallChart" style="max-height: 400px;"></canvas>
+</div>
+
+<!-- Navigation Buttons -->
+<div style="display: flex; gap: 15px; margin-top: 30px;">
+    <button onclick="switchStep(4)" class="btn-secondary" style="flex: 1;">
+        ← Back to OPEX
+    </button>
+    <button onclick="switchStep(6)" class="btn-primary" style="flex: 1;">
+        Continue to Investor Analysis →
+    </button>
+</div>
