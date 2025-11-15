@@ -332,7 +332,38 @@ function updateInvestmentStructure(structure) {
         console.warn('Investment structure is undefined');
         return;
     }
-    
+
+    // Update the investment structure table
+    const tableBody = document.getElementById('investmentStructureTable');
+    if (tableBody) {
+        const totalCapital = structure.totalCapex || 0;
+        const lpCapital = structure.totalLpCapital || 0;
+        const gpCapital = totalCapital - lpCapital;
+        const lpPercent = totalCapital > 0 ? ((lpCapital / totalCapital) * 100) : 0;
+        const gpPercentOfCapital = totalCapital > 0 ? ((gpCapital / totalCapital) * 100) : 0;
+
+        tableBody.innerHTML = `
+            <tr>
+                <td><strong>Limited Partners (LP)</strong></td>
+                <td class="number">$${lpCapital.toLocaleString()}</td>
+                <td class="number">${lpPercent.toFixed(1)}%</td>
+                <td class="number">${structure.lpPercent || 0}%</td>
+            </tr>
+            <tr>
+                <td><strong>General Partner (GP)</strong></td>
+                <td class="number">$${gpCapital.toLocaleString()}</td>
+                <td class="number">${gpPercentOfCapital.toFixed(1)}%</td>
+                <td class="number">${structure.gpPercent || 0}%</td>
+            </tr>
+            <tr class="total-row">
+                <td><strong>TOTAL</strong></td>
+                <td class="number"><strong>$${totalCapital.toLocaleString()}</strong></td>
+                <td class="number"><strong>100.0%</strong></td>
+                <td class="number"><strong>100%</strong></td>
+            </tr>
+        `;
+    }
+
     safeUpdateElement('structureTotalCapex', '$' + (structure.totalCapex || 0).toLocaleString());
     safeUpdateElement('structureTotalLpPool', '$' + (structure.totalLpCapital || 0).toLocaleString());
     safeUpdateElement('structureInvestorLpShare', (structure.investorLpSharePercent || 0).toFixed(1) + '%');
