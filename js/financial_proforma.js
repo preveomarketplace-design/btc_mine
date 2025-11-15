@@ -30,89 +30,87 @@ function getProFormaBtcPrices() {
 }
 
 /**
- * Update Pro Forma Income Statement Table
+ * Update BTC Accumulation & Exit Scenarios Table
  */
-function updateProFormaIncomeStatement(projections, yearlyPrices) {
-    console.log('Updating Pro Forma Income Statement...', {projections, yearlyPrices});
-    
+function updateAccumulationTable(projections, yearlyPrices) {
+    console.log('Updating BTC Accumulation & Exit Scenarios...', {projections, yearlyPrices});
+
     if (!projections || !projections.yearlyData || projections.yearlyData.length === 0) {
         console.error('No projection data available');
         return;
     }
-    
+
     const data = projections.yearlyData;
-    const opexEnergy = projectData.totalOpex * 0.6; // Assume 60% energy
-    const opexMaint = projectData.totalOpex * 0.4;  // Assume 40% maintenance
-    
-    let totalRevenue = 0, totalBtc = 0, totalOpex = 0, totalEbitda = 0;
-    let totalOpexEnergy = 0, totalOpexMaint = 0;
-    
+    const initialCapex = projectData.totalCapex;
+    const equipmentResidualPercent = 0.25; // 25% residual value at year 5
+
+    let cumulativeBTC = 0;
+    let cumulativeOpex = 0;
+
     // Populate each year
     for (let i = 0; i < 5; i++) {
         const yearData = data[i] || {};
-        const revenue = yearData.revenue || 0;
         const btcMined = yearData.btcMined || 0;
         const btcPrice = yearlyPrices[i] || 0;
         const opex = yearData.opex || projectData.totalOpex || 0;
-        const ebitda = revenue - opex;
-        const margin = revenue > 0 ? ((ebitda / revenue) * 100) : 0;
-        
-        // Revenue
-        const revEl = document.getElementById(`rev_y${i+1}`);
+
+        // Accumulate BTC and OPEX
+        cumulativeBTC += btcMined;
+        cumulativeOpex += opex;
+
+        // BTC mined this year
         const btcEl = document.getElementById(`btc_y${i+1}`);
-        const priceEl = document.getElementById(`price_y${i+1}`);
-        
-        if (revEl) revEl.textContent = '$' + formatNumber(revenue);
         if (btcEl) btcEl.textContent = btcMined.toFixed(2);
+
+        // Cumulative BTC holdings
+        const cumBtcEl = document.getElementById(`cum_btc_y${i+1}`);
+        if (cumBtcEl) cumBtcEl.textContent = cumulativeBTC.toFixed(2) + ' BTC';
+
+        // BTC price
+        const priceEl = document.getElementById(`price_y${i+1}`);
         if (priceEl) priceEl.textContent = '$' + formatNumber(btcPrice);
-        
-        // OPEX
-        const opexEl = document.getElementById(`opex_y${i+1}`);
-        const energyEl = document.getElementById(`opex_energy_y${i+1}`);
-        const maintEl = document.getElementById(`opex_maint_y${i+1}`);
-        
-        const yearEnergy = opexEnergy;
-        const yearMaint = opexMaint;
-        
-        if (opexEl) opexEl.textContent = '($' + formatNumber(opex) + ')';
-        if (energyEl) energyEl.textContent = '($' + formatNumber(yearEnergy) + ')';
-        if (maintEl) maintEl.textContent = '($' + formatNumber(yearMaint) + ')';
-        
-        // EBITDA
-        const ebitdaEl = document.getElementById(`ebitda_y${i+1}`);
-        const marginEl = document.getElementById(`margin_y${i+1}`);
-        
-        if (ebitdaEl) ebitdaEl.textContent = '$' + formatNumber(ebitda);
-        if (marginEl) marginEl.textContent = margin.toFixed(1) + '%';
-        
-        totalRevenue += revenue;
-        totalBtc += btcMined;
-        totalOpex += opex;
-        totalEbitda += ebitda;
-        totalOpexEnergy += yearEnergy;
-        totalOpexMaint += yearMaint;
+
+        // EXIT SCENARIO CALCULATIONS
+        // Total BTC sale proceeds if exit at end of this year
+        const exitProceeds = cumulativeBTC * btcPrice;
+        const exitProceedsEl = document.getElementById(`exit_proceeds_y${i+1}`);
+        if (exitProceedsEl) exitProceedsEl.textContent = '$' + formatNumber(exitProceeds);
+
+        // Cumulative OPEX paid through this year
+        const exitOpexEl = document.getElementById(`exit_opex_y${i+1}`);
+        if (exitOpexEl) exitOpexEl.textContent = '($' + formatNumber(cumulativeOpex) + ')';
+
+        // Initial CAPEX (same for all years)
+        const exitCapexEl = document.getElementById(`exit_capex_y${i+1}`);
+        if (exitCapexEl) exitCapexEl.textContent = '($' + formatNumber(initialCapex) + ')';
+
+        // Equipment residual value (only significant in year 5, declining before that)
+        const residualValue = (i === 4) ? (initialCapex * equipmentResidualPercent) : (initialCapex * equipmentResidualPercent * (i + 1) / 5);
+        const exitResidualEl = document.getElementById(`exit_residual_y${i+1}`);
+        if (exitResidualEl) exitResidualEl.textContent = '$' + formatNumber(residualValue);
+
+        // Net cash if exit this year
+        const netCash = exitProceeds - cumulativeOpex - initialCapex + residualValue;
+        const exitNetEl = document.getElementById(`exit_net_y${i+1}`);
+        if (exitNetEl) {
+            exitNetEl.textContent = (netCash >= 0 ? '$' : '($') + formatNumber(Math.abs(netCash)) + (netCash >= 0 ? '' : ')');
+            // Color code: green if positive, red if negative
+            exitNetEl.style.color = netCash >= 0 ? '#2d6a4f' : '#e74c3c';
+            exitNetEl.style.fontWeight = '700';
+        }
+
+        // ROI % if exit this year
+        const roi = (netCash / initialCapex) * 100;
+        const exitRoiEl = document.getElementById(`exit_roi_y${i+1}`);
+        if (exitRoiEl) {
+            exitRoiEl.textContent = roi.toFixed(1) + '%';
+            // Color code: green if positive, red if negative
+            exitRoiEl.style.color = roi >= 0 ? '#2d6a4f' : '#e74c3c';
+            exitRoiEl.style.fontWeight = '700';
+        }
     }
-    
-    // Totals
-    const revTotalEl = document.getElementById('rev_total');
-    const btcTotalEl = document.getElementById('btc_total');
-    const opexTotalEl = document.getElementById('opex_total');
-    const opexEnergyTotalEl = document.getElementById('opex_energy_total');
-    const opexMaintTotalEl = document.getElementById('opex_maint_total');
-    const ebitdaTotalEl = document.getElementById('ebitda_total');
-    const marginAvgEl = document.getElementById('margin_avg');
-    
-    if (revTotalEl) revTotalEl.textContent = '$' + formatNumber(totalRevenue);
-    if (btcTotalEl) btcTotalEl.textContent = totalBtc.toFixed(2);
-    if (opexTotalEl) opexTotalEl.textContent = '($' + formatNumber(totalOpex) + ')';
-    if (opexEnergyTotalEl) opexEnergyTotalEl.textContent = '($' + formatNumber(totalOpexEnergy) + ')';
-    if (opexMaintTotalEl) opexMaintTotalEl.textContent = '($' + formatNumber(totalOpexMaint) + ')';
-    if (ebitdaTotalEl) ebitdaTotalEl.textContent = '$' + formatNumber(totalEbitda);
-    
-    const avgMargin = totalRevenue > 0 ? ((totalEbitda / totalRevenue) * 100) : 0;
-    if (marginAvgEl) marginAvgEl.textContent = avgMargin.toFixed(1) + '%';
-    
-    console.log(' Income Statement updated');
+
+    console.log(' Accumulation Table updated');
 }
 
 /**
@@ -572,6 +570,211 @@ function createEbitdaMarginChart(projections) {
 }
 
 /**
+ * Create BTC Position Value Chart
+ */
+function createBtcPositionChart(projections, yearlyPrices) {
+    console.log('Creating BTC Position Value Chart...');
+
+    const canvas = document.getElementById('btcPositionChart');
+    if (!canvas) {
+        console.error(' Canvas btcPositionChart not found!');
+        return;
+    }
+
+    if (!window.Chart) {
+        console.error(' Chart.js not loaded!');
+        return;
+    }
+
+    if (window.btcPositionChart && typeof window.btcPositionChart.destroy === 'function') {
+        window.btcPositionChart.destroy();
+    }
+
+    const years = projections.yearlyData.map(d => `Year ${d.year}`);
+
+    let cumulativeBTC = 0;
+    const cumulativeBTCData = [];
+    const positionValues = [];
+
+    for (let i = 0; i < projections.yearlyData.length; i++) {
+        cumulativeBTC += projections.yearlyData[i].btcMined;
+        cumulativeBTCData.push(cumulativeBTC);
+        positionValues.push((cumulativeBTC * yearlyPrices[i]) / 1000);
+    }
+
+    const ctx = canvas.getContext('2d');
+    window.btcPositionChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: years,
+            datasets: [
+                {
+                    label: 'Position Value (Thousands $)',
+                    data: positionValues,
+                    backgroundColor: 'rgba(243, 156, 18, 0.7)',
+                    borderColor: '#f39c12',
+                    borderWidth: 2,
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'Cumulative BTC',
+                    data: cumulativeBTCData,
+                    borderColor: '#2d6a4f',
+                    backgroundColor: 'rgba(45, 106, 79, 0.1)',
+                    borderWidth: 3,
+                    fill: false,
+                    tension: 0.4,
+                    type: 'line',
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: { font: { size: 11, weight: '600' } }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            if (context.dataset.yAxisID === 'y1') {
+                                return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + ' BTC';
+                            }
+                            return 'Value: $' + (context.parsed.y * 1000).toLocaleString();
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 10 }, color: '#6c757d' }
+                },
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    beginAtZero: true,
+                    grid: { color: 'rgba(0,0,0,0.05)' },
+                    ticks: {
+                        font: { size: 10 },
+                        callback: function(value) {
+                            return '$' + (value * 1000).toLocaleString();
+                        }
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    beginAtZero: true,
+                    grid: { drawOnChartArea: false },
+                    ticks: {
+                        font: { size: 10 },
+                        callback: function(value) {
+                            return value.toFixed(1) + ' BTC';
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    console.log(' BTC Position Chart created');
+}
+
+/**
+ * Create Exit ROI Chart
+ */
+function createExitROIChart(projections, yearlyPrices) {
+    console.log('Creating Exit ROI Chart...');
+
+    const canvas = document.getElementById('exitROIChart');
+    if (!canvas) {
+        console.error(' Canvas exitROIChart not found!');
+        return;
+    }
+
+    if (window.exitROIChart && typeof window.exitROIChart.destroy === 'function') {
+        window.exitROIChart.destroy();
+    }
+
+    const years = projections.yearlyData.map(d => `Year ${d.year}`);
+    const initialCapex = projectData.totalCapex;
+    const equipmentResidualPercent = 0.25;
+
+    let cumulativeBTC = 0;
+    let cumulativeOpex = 0;
+    const roiData = [];
+
+    for (let i = 0; i < projections.yearlyData.length; i++) {
+        cumulativeBTC += projections.yearlyData[i].btcMined;
+        cumulativeOpex += (projections.yearlyData[i].opex || projectData.totalOpex);
+
+        const exitProceeds = cumulativeBTC * yearlyPrices[i];
+        const residualValue = (i === 4) ? (initialCapex * equipmentResidualPercent) : (initialCapex * equipmentResidualPercent * (i + 1) / 5);
+        const netCash = exitProceeds - cumulativeOpex - initialCapex + residualValue;
+        const roi = (netCash / initialCapex) * 100;
+
+        roiData.push(roi);
+    }
+
+    const ctx = canvas.getContext('2d');
+    window.exitROIChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: years,
+            datasets: [{
+                label: 'Exit ROI %',
+                data: roiData,
+                backgroundColor: roiData.map(roi => roi >= 0 ? 'rgba(45, 106, 79, 0.7)' : 'rgba(231, 76, 60, 0.7)'),
+                borderColor: roiData.map(roi => roi >= 0 ? '#2d6a4f' : '#e74c3c'),
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'ROI: ' + context.parsed.y.toFixed(1) + '%';
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 10 }, color: '#6c757d' }
+                },
+                y: {
+                    grid: { color: 'rgba(0,0,0,0.05)' },
+                    ticks: {
+                        font: { size: 10 },
+                        callback: function(value) {
+                            return value.toFixed(0) + '%';
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    console.log(' Exit ROI Chart created');
+}
+
+/**
  * Create Cash Flow Waterfall Chart
  */
 function createWaterfallChart(projections) {
@@ -687,18 +890,18 @@ function updateProFormaReport(projections, inputs) {
     
     // Get BTC prices from inputs
     const yearlyPrices = getProFormaBtcPrices();
-    
+
     // Update all sections
-    updateProFormaIncomeStatement(projections, yearlyPrices);
+    updateAccumulationTable(projections, yearlyPrices);
     updateProFormaCashFlow(projections);
     updateKeyMetrics(projections, inputs);
     
     // Create all charts (with delays to ensure DOM is ready)
     setTimeout(() => {
-        createRevenueEbitdaChart(projections);
+        createBtcPositionChart(projections, yearlyPrices);
         createOpexBreakdownChart(projections);
         createCumulativeCashFlowChart(projections);
-        createEbitdaMarginChart(projections);
+        createExitROIChart(projections, yearlyPrices);
         createWaterfallChart(projections);
     }, 100);
     
