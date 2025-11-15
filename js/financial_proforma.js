@@ -572,6 +572,99 @@ function createEbitdaMarginChart(projections) {
 }
 
 /**
+ * Create Cash Flow Waterfall Chart
+ */
+function createWaterfallChart(projections) {
+    console.log('Creating Waterfall Chart...');
+
+    const canvas = document.getElementById('waterfallChart');
+    if (!canvas) {
+        console.error('❌ Canvas waterfallChart not found!');
+        return;
+    }
+
+    if (window.waterfallChart && typeof window.waterfallChart.destroy === 'function') {
+        window.waterfallChart.destroy();
+    }
+
+    // Calculate waterfall data
+    const capex = -projectData.totalCapex;
+    const yearlyRevenues = projections.yearlyData.map(d => d.revenue);
+    const yearlyOpex = projections.yearlyData.map(() => -projectData.totalOpex);
+    const residual = projectData.totalCapex * 0.25;
+
+    // Build cumulative values for waterfall
+    const labels = ['Initial CAPEX'];
+    const data = [capex / 1000];
+    let cumulative = capex;
+
+    for (let i = 0; i < 5; i++) {
+        labels.push(`Y${i+1} Revenue`);
+        data.push(yearlyRevenues[i] / 1000);
+
+        labels.push(`Y${i+1} OPEX`);
+        data.push(yearlyOpex[i] / 1000);
+    }
+
+    labels.push('Equipment Residual');
+    data.push(residual / 1000);
+
+    labels.push('Final Position');
+    data.push((cumulative + projections.yearlyData.reduce((sum, d) => sum + d.revenue, 0) + yearlyOpex.reduce((a, b) => a + b, 0) + residual) / 1000);
+
+    const ctx = canvas.getContext('2d');
+    window.waterfallChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Cash Flow',
+                data: data,
+                backgroundColor: data.map(v => v >= 0 ? 'rgba(45, 106, 79, 0.7)' : 'rgba(231, 76, 60, 0.7)'),
+                borderColor: data.map(v => v >= 0 ? '#2d6a4f' : '#e74c3c'),
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return '$' + (context.parsed.y * 1000).toLocaleString(undefined, {maximumFractionDigits: 0});
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: {
+                        font: { size: 9 },
+                        color: '#6c757d',
+                        maxRotation: 45,
+                        minRotation: 45
+                    }
+                },
+                y: {
+                    grid: { color: 'rgba(0,0,0,0.05)' },
+                    ticks: {
+                        font: { size: 10 },
+                        callback: function(value) {
+                            return '$' + (value * 1000).toLocaleString(undefined, {maximumFractionDigits: 0});
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    console.log('✅ Waterfall Chart created');
+}
+
+/**
  * Format number with commas
  */
 function formatNumber(num) {
@@ -606,6 +699,7 @@ function updateProFormaReport(projections, inputs) {
         createOpexBreakdownChart(projections);
         createCumulativeCashFlowChart(projections);
         createEbitdaMarginChart(projections);
+        createWaterfallChart(projections);
     }, 100);
     
     console.log('✅ Pro Forma Report update complete');
