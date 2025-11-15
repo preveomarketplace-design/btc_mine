@@ -112,7 +112,7 @@ function updateProFormaIncomeStatement(projections, yearlyPrices) {
     const avgMargin = totalRevenue > 0 ? ((totalEbitda / totalRevenue) * 100) : 0;
     if (marginAvgEl) marginAvgEl.textContent = avgMargin.toFixed(1) + '%';
     
-    console.log('✅ Income Statement updated');
+    console.log(' Income Statement updated');
 }
 
 /**
@@ -165,7 +165,7 @@ function updateProFormaCashFlow(projections) {
     if (residualTotalEl) residualTotalEl.textContent = '$' + formatNumber(equipmentResidual);
     if (fcfTotalEl) fcfTotalEl.textContent = '$' + formatNumber(totalFCF);
     
-    console.log('✅ Cash Flow Statement updated');
+    console.log(' Cash Flow Statement updated');
 }
 
 /**
@@ -204,7 +204,7 @@ function updateKeyMetrics(projections, inputs) {
     const roiEl = document.getElementById('metric_roi');
     if (roiEl) roiEl.textContent = roi.toFixed(1) + '%';
     
-    console.log('✅ Key Metrics updated');
+    console.log(' Key Metrics updated');
 }
 
 /**
@@ -215,12 +215,12 @@ function createRevenueEbitdaChart(projections) {
 
     const canvas = document.getElementById('revenueEbitdaChart');
     if (!canvas) {
-        console.error('❌ Canvas revenueEbitdaChart not found!');
+        console.error(' Canvas revenueEbitdaChart not found!');
         return;
     }
 
     if (!window.Chart) {
-        console.error('❌ Chart.js not loaded!');
+        console.error(' Chart.js not loaded!');
         return;
     }
 
@@ -301,7 +301,7 @@ function createRevenueEbitdaChart(projections) {
         }
     });
     
-    console.log('✅ Revenue & EBITDA Chart created');
+    console.log(' Revenue & EBITDA Chart created');
 }
 
 /**
@@ -312,7 +312,7 @@ function createOpexBreakdownChart(projections) {
 
     const canvas = document.getElementById('opexBreakdownChart');
     if (!canvas) {
-        console.error('❌ Canvas opexBreakdownChart not found!');
+        console.error(' Canvas opexBreakdownChart not found!');
         return;
     }
 
@@ -383,7 +383,7 @@ function createOpexBreakdownChart(projections) {
         }
     });
     
-    console.log('✅ OPEX Breakdown Chart created');
+    console.log(' OPEX Breakdown Chart created');
 }
 
 /**
@@ -394,7 +394,7 @@ function createCumulativeCashFlowChart(projections) {
 
     const canvas = document.getElementById('cumulativeCashFlowChart');
     if (!canvas) {
-        console.error('❌ Canvas cumulativeCashFlowChart not found!');
+        console.error(' Canvas cumulativeCashFlowChart not found!');
         return;
     }
 
@@ -490,7 +490,7 @@ function createCumulativeCashFlowChart(projections) {
         }
     });
     
-    console.log('✅ Cumulative Cash Flow Chart created');
+    console.log(' Cumulative Cash Flow Chart created');
 }
 
 /**
@@ -501,7 +501,7 @@ function createEbitdaMarginChart(projections) {
 
     const canvas = document.getElementById('ebitdaMarginChart');
     if (!canvas) {
-        console.error('❌ Canvas ebitdaMarginChart not found!');
+        console.error(' Canvas ebitdaMarginChart not found!');
         return;
     }
 
@@ -568,7 +568,7 @@ function createEbitdaMarginChart(projections) {
         }
     });
     
-    console.log('✅ EBITDA Margin Chart created');
+    console.log(' EBITDA Margin Chart created');
 }
 
 /**
@@ -579,7 +579,7 @@ function createWaterfallChart(projections) {
 
     const canvas = document.getElementById('waterfallChart');
     if (!canvas) {
-        console.error('❌ Canvas waterfallChart not found!');
+        console.error(' Canvas waterfallChart not found!');
         return;
     }
 
@@ -661,7 +661,7 @@ function createWaterfallChart(projections) {
         }
     });
 
-    console.log('✅ Waterfall Chart created');
+    console.log(' Waterfall Chart created');
 }
 
 /**
@@ -681,7 +681,7 @@ function updateProFormaReport(projections, inputs) {
     console.log('Inputs:', inputs);
     
     if (!projections || !projections.yearlyData) {
-        console.error('❌ No projection data available!');
+        console.error(' No projection data available!');
         return;
     }
     
@@ -702,7 +702,7 @@ function updateProFormaReport(projections, inputs) {
         createWaterfallChart(projections);
     }, 100);
     
-    console.log('✅ Pro Forma Report update complete');
+    console.log(' Pro Forma Report update complete');
 }
 
-console.log('✅ Pro Forma financial module loaded (FIXED VERSION)');
+console.log(' Pro Forma financial module loaded (FIXED VERSION)');
