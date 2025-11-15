@@ -225,7 +225,7 @@ function createRevenueEbitdaChart(projections) {
     }
 
     // Destroy existing chart
-    if (window.revenueEbitdaChart) {
+    if (window.revenueEbitdaChart && typeof window.revenueEbitdaChart.destroy === 'function') {
         window.revenueEbitdaChart.destroy();
     }
 
@@ -316,7 +316,7 @@ function createOpexBreakdownChart(projections) {
         return;
     }
 
-    if (window.opexBreakdownChart) {
+    if (window.opexBreakdownChart && typeof window.opexBreakdownChart.destroy === 'function') {
         window.opexBreakdownChart.destroy();
     }
 
@@ -398,7 +398,7 @@ function createCumulativeCashFlowChart(projections) {
         return;
     }
 
-    if (window.cumulativeCashFlowChart) {
+    if (window.cumulativeCashFlowChart && typeof window.cumulativeCashFlowChart.destroy === 'function') {
         window.cumulativeCashFlowChart.destroy();
     }
 
@@ -503,7 +503,7 @@ function createEbitdaMarginChart(projections) {
         return;
     }
 
-    if (window.ebitdaMarginChart) {
+    if (window.ebitdaMarginChart && typeof window.ebitdaMarginChart.destroy === 'function') {
         window.ebitdaMarginChart.destroy();
     }
 
