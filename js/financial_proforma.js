@@ -212,27 +212,28 @@ function updateKeyMetrics(projections, inputs) {
  */
 function createRevenueEbitdaChart(projections) {
     console.log('Creating Revenue & EBITDA Chart...');
-    
-    const ctx = document.getElementById('revenueEbitdaChart');
-    if (!ctx) {
+
+    const canvas = document.getElementById('revenueEbitdaChart');
+    if (!canvas) {
         console.error('❌ Canvas revenueEbitdaChart not found!');
         return;
     }
-    
+
     if (!window.Chart) {
         console.error('❌ Chart.js not loaded!');
         return;
     }
-    
+
     // Destroy existing chart
     if (window.revenueEbitdaChart) {
         window.revenueEbitdaChart.destroy();
     }
-    
+
     const years = projections.yearlyData.map(d => `Year ${d.year}`);
     const revenues = projections.yearlyData.map(d => d.revenue / 1000);
     const ebitdas = projections.yearlyData.map(d => (d.revenue - d.opex) / 1000);
-    
+
+    const ctx = canvas.getContext('2d');
     window.revenueEbitdaChart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -308,21 +309,22 @@ function createRevenueEbitdaChart(projections) {
  */
 function createOpexBreakdownChart(projections) {
     console.log('Creating OPEX Breakdown Chart...');
-    
-    const ctx = document.getElementById('opexBreakdownChart');
-    if (!ctx) {
+
+    const canvas = document.getElementById('opexBreakdownChart');
+    if (!canvas) {
         console.error('❌ Canvas opexBreakdownChart not found!');
         return;
     }
-    
+
     if (window.opexBreakdownChart) {
         window.opexBreakdownChart.destroy();
     }
-    
+
     const years = projections.yearlyData.map(d => `Year ${d.year}`);
     const opexEnergy = projections.yearlyData.map(() => (projectData.totalOpex * 0.6) / 1000);
     const opexMaint = projections.yearlyData.map(() => (projectData.totalOpex * 0.4) / 1000);
-    
+
+    const ctx = canvas.getContext('2d');
     window.opexBreakdownChart = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -389,28 +391,29 @@ function createOpexBreakdownChart(projections) {
  */
 function createCumulativeCashFlowChart(projections) {
     console.log('Creating Cumulative Cash Flow Chart...');
-    
-    const ctx = document.getElementById('cumulativeCashFlowChart');
-    if (!ctx) {
+
+    const canvas = document.getElementById('cumulativeCashFlowChart');
+    if (!canvas) {
         console.error('❌ Canvas cumulativeCashFlowChart not found!');
         return;
     }
-    
+
     if (window.cumulativeCashFlowChart) {
         window.cumulativeCashFlowChart.destroy();
     }
-    
+
     const years = ['Start'].concat(projections.yearlyData.map(d => `Year ${d.year}`));
     let cumulative = -projectData.totalCapex;
     const cumulativeData = [-projectData.totalCapex / 1000];
-    
+
     projections.yearlyData.forEach((d, i) => {
         const ebitda = d.revenue - d.opex;
         const residual = i === 4 ? projectData.totalCapex * 0.25 : 0;
         cumulative += ebitda + residual;
         cumulativeData.push(cumulative / 1000);
     });
-    
+
+    const ctx = canvas.getContext('2d');
     window.cumulativeCashFlowChart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -493,23 +496,24 @@ function createCumulativeCashFlowChart(projections) {
  */
 function createEbitdaMarginChart(projections) {
     console.log('Creating EBITDA Margin Chart...');
-    
-    const ctx = document.getElementById('ebitdaMarginChart');
-    if (!ctx) {
+
+    const canvas = document.getElementById('ebitdaMarginChart');
+    if (!canvas) {
         console.error('❌ Canvas ebitdaMarginChart not found!');
         return;
     }
-    
+
     if (window.ebitdaMarginChart) {
         window.ebitdaMarginChart.destroy();
     }
-    
+
     const years = projections.yearlyData.map(d => `Year ${d.year}`);
     const margins = projections.yearlyData.map(d => {
         const ebitda = d.revenue - d.opex;
         return d.revenue > 0 ? ((ebitda / d.revenue) * 100) : 0;
     });
-    
+
+    const ctx = canvas.getContext('2d');
     window.ebitdaMarginChart = new Chart(ctx, {
         type: 'bar',
         data: {
