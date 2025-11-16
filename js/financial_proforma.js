@@ -923,8 +923,69 @@ function updateProFormaReport(projections, inputs) {
         createExitROIChart(projections, yearlyPrices);
         createWaterfallChart(projections);
     }, 100);
+
+    // Update sensitivity analysis
+    updateSensitivityAnalysis(projections, inputs);
     
     console.log(' Pro Forma Report update complete');
+}
+
+/**
+ * Update Sensitivity Analysis Table
+ */
+function updateSensitivityAnalysis(projections, inputs) {
+    console.log('Updating Sensitivity Analysis...');
+
+    const btcPrices = [150000, 120000, 100000, 80000, 60000];
+    const hashRateMultipliers = [1.0, 1.2, 1.5, 0.8, 0.5];
+    const hashRateLabels = ['100', '120', '150', '80', '50'];
+
+    const baseHashrate = projectData.totalHashrate || 0;
+    const capex = projectData.totalCapex;
+    const opex = projectData.totalOpex;
+
+    btcPrices.forEach((btcPrice, i) => {
+        hashRateMultipliers.forEach((multiplier, j) => {
+            const adjustedHashrate = baseHashrate * multiplier;
+
+            // Calculate total BTC mined over 5 years with adjusted hashrate
+            let totalBtcMined = 0;
+            for (let year = 0; year < 5; year++) {
+                const yearBtc = projections.yearlyData[year]?.btcMined || 0;
+                totalBtcMined += yearBtc * multiplier; // Scale by hash rate
+            }
+
+            // Calculate cash flows for IRR
+            const cashFlows = [];
+            for (let year = 0; year < 5; year++) {
+                const yearlyOpex = -opex;
+
+                if (year === 4) {
+                    // Year 5: sell all BTC + equipment residual
+                    const btcProceeds = totalBtcMined * btcPrice;
+                    const equipmentResidual = capex * 0.25;
+                    cashFlows.push(yearlyOpex + btcProceeds + equipmentResidual);
+                } else {
+                    cashFlows.push(yearlyOpex);
+                }
+            }
+
+            // Calculate IRR
+            const irr = calculateIRR(capex, cashFlows);
+
+            // Update table cell
+            const cellId = `sens_${btcPrice / 1000}_${hashRateLabels[j]}`;
+            const cell = document.getElementById(cellId);
+            if (cell) {
+                cell.textContent = irr.toFixed(1) + '%';
+                // Color code: green if positive, red if negative
+                cell.style.color = irr >= 0 ? '#2d6a4f' : '#e74c3c';
+                cell.style.fontWeight = '600';
+            }
+        });
+    });
+
+    console.log(' Sensitivity Analysis updated');
 }
 
 console.log(' Pro Forma financial module loaded (FIXED VERSION)');
