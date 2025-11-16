@@ -393,17 +393,10 @@ function updateGpReturns(gp, structure) {
         console.warn('GP returns data is undefined');
         return;
     }
-    
-    safeUpdateElement('gpInvestmentAmount', '$' + (gp.investment || 0).toLocaleString());
-    safeUpdateElement('gpBtcEarned', (gp.btcEarned || 0).toFixed(4) + ' BTC');
-    safeUpdateElement('gpTotalReturn', '$' + (gp.totalReturn || 0).toLocaleString(undefined, {maximumFractionDigits: 0}));
-    
-    const roiColor = (gp.roi || 0) >= 0 ? '#2d6a4f' : '#e74c3c';
-    const roiElement = document.getElementById('gpRoi');
-    if (roiElement) {
-        roiElement.textContent = (gp.roi || 0).toFixed(1) + '%';
-        roiElement.style.color = roiColor;
-    }
+
+    safeUpdateElement('gpShare', (structure.gpPercent || 0) + '%');
+    safeUpdateElement('gpProfit', '$' + (gp.totalReturn || 0).toLocaleString(undefined, {maximumFractionDigits: 0}));
+    safeUpdateElement('gpLpRatio', (structure.gpPercent || 0) + ':' + (structure.lpPercent || 0));
 }
 
 function updateLpCashFlowTable(lpYearly, structure) {
