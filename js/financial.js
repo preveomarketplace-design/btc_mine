@@ -376,13 +376,12 @@ function updateLpReturns(lp, structure) {
         console.warn('LP returns data is undefined');
         return;
     }
-    
-    safeUpdateElement('lpInvestmentAmount', '$' + (lp.investment || 0).toLocaleString());
-    safeUpdateElement('lpBtcEarned', (lp.btcEarned || 0).toFixed(4) + ' BTC');
-    safeUpdateElement('lpTotalReturn', '$' + (lp.totalReturn || 0).toLocaleString(undefined, {maximumFractionDigits: 0}));
-    
+
+    safeUpdateElement('lpInvestment', '$' + (lp.investment || 0).toLocaleString());
+    safeUpdateElement('lpReturn', '$' + (lp.totalReturn || 0).toLocaleString(undefined, {maximumFractionDigits: 0}));
+
     const roiColor = (lp.roi || 0) >= 0 ? '#2d6a4f' : '#e74c3c';
-    const roiElement = document.getElementById('lpRoi');
+    const roiElement = document.getElementById('lpROI');
     if (roiElement) {
         roiElement.textContent = (lp.roi || 0).toFixed(1) + '%';
         roiElement.style.color = roiColor;
