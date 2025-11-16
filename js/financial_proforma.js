@@ -174,20 +174,32 @@ function updateProFormaCashFlow(projections) {
  */
 function updateKeyMetrics(projections, inputs) {
     console.log('Updating Key Metrics...');
-    
+
     if (!projections) return;
-    
-    // IRR
-    const cashFlows = [-projectData.totalCapex];
+
+    // IRR - Build cash flows for accumulation model
+    const cashFlows = [];
     projections.yearlyData.forEach((d, i) => {
-        const ebitda = d.revenue - d.opex;
-        const residual = i === 4 ? projectData.totalCapex * 0.25 : 0;
-        cashFlows.push(ebitda + residual);
+        // In accumulation model, cash flow = -OPEX (negative) until exit
+        // We're NOT selling BTC each year, just accumulating
+        const yearlyOpex = -(d.opex || projectData.totalOpex);
+
+        // Only Year 5 includes BTC sale + equipment residual
+        if (i === 4) {
+            const totalBtcMined = projections.yearlyData.reduce((sum, year) => sum + year.btcMined, 0);
+            const btcPrice = parseFloat(document.getElementById('btcPriceY5')?.value || 150000);
+            const btcProceeds = totalBtcMined * btcPrice;
+            const equipmentResidual = projectData.totalCapex * 0.25;
+            cashFlows.push(yearlyOpex + btcProceeds + equipmentResidual);
+        } else {
+            cashFlows.push(yearlyOpex);
+        }
     });
-    
-    const irr = calculateIRRSimplified ? calculateIRRSimplified(cashFlows) : 0;
+
+    // Calculate IRR using the correct function
+    const irr = calculateIRR(projectData.totalCapex, cashFlows);
     const irrEl = document.getElementById('metric_irr');
-    if (irrEl) irrEl.textContent = (irr * 100).toFixed(1) + '%';
+    if (irrEl) irrEl.textContent = irr.toFixed(1) + '%';
     
     // NPV
     const npv = projections.npv || 0;
