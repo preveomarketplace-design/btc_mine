@@ -84,8 +84,11 @@ function updateAccumulationTable(projections, yearlyPrices) {
         const exitCapexEl = document.getElementById(`exit_capex_y${i+1}`);
         if (exitCapexEl) exitCapexEl.textContent = '($' + formatNumber(initialCapex) + ')';
 
-        // Equipment residual value (only significant in year 5, declining before that)
-        const residualValue = (i === 4) ? (initialCapex * equipmentResidualPercent) : (initialCapex * equipmentResidualPercent * (i + 1) / 5);
+        // Equipment residual value - linear depreciation from 100% to 25% over 5 years
+        // Year 1: 85%, Year 2: 70%, Year 3: 55%, Year 4: 40%, Year 5: 25%
+        const depreciationRate = 0.75; // Depreciates by 75% over 5 years
+        const residualPercent = 1 - (depreciationRate * (i + 1) / 5);
+        const residualValue = initialCapex * residualPercent;
         const exitResidualEl = document.getElementById(`exit_residual_y${i+1}`);
         if (exitResidualEl) exitResidualEl.textContent = '$' + formatNumber(residualValue);
 
@@ -709,7 +712,6 @@ function createExitROIChart(projections, yearlyPrices) {
 
     const years = projections.yearlyData.map(d => `Year ${d.year}`);
     const initialCapex = projectData.totalCapex;
-    const equipmentResidualPercent = 0.25;
 
     let cumulativeBTC = 0;
     let cumulativeOpex = 0;
@@ -720,7 +722,12 @@ function createExitROIChart(projections, yearlyPrices) {
         cumulativeOpex += (projections.yearlyData[i].opex || projectData.totalOpex);
 
         const exitProceeds = cumulativeBTC * yearlyPrices[i];
-        const residualValue = (i === 4) ? (initialCapex * equipmentResidualPercent) : (initialCapex * equipmentResidualPercent * (i + 1) / 5);
+
+        // Equipment residual value - linear depreciation from 100% to 25% over 5 years
+        const depreciationRate = 0.75;
+        const residualPercent = 1 - (depreciationRate * (i + 1) / 5);
+        const residualValue = initialCapex * residualPercent;
+
         const netCash = exitProceeds - cumulativeOpex - initialCapex + residualValue;
         const roi = (netCash / initialCapex) * 100;
 
