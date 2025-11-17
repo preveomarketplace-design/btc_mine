@@ -380,9 +380,13 @@ function renderMinerTable() {
         totalPower += minerPower;
         totalCost += minerCost;
         totalQty += m.quantity;
+
+        // Escape user input to prevent XSS
+        const safeModel = typeof escapeHtml === 'function' ? escapeHtml(m.model) : String(m.model).replace(/[<>]/g, '');
+
         return `
             <tr>
-                <td>${m.model}</td>
+                <td>${safeModel}</td>
                 <td>${m.quantity}</td>
                 <td class="number">${m.hashrate.toFixed(1)}</td>
                 <td class="number">${m.power.toLocaleString()}</td>

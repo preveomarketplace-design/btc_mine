@@ -1,106 +1,89 @@
-<!-- Step 6: Investment Decision Analysis (Buy vs Mine) -->
+<!-- Step 6: Investor Analysis -->
 
 <div class="info-box">
-    <div class="info-box-title">Investment Decision Framework</div>
+    <div class="info-box-title">Investor Analysis</div>
     <div class="info-box-text">
-        This analysis helps you decide: <strong>Should I invest $<span id="investorCapitalDisplay">200,000</span> in mining OR just buy BTC?</strong>
+        This analysis evaluates your <strong>$<span id="investorCapitalDisplay">200,000</span></strong> investment in the mining operation, showing expected returns, distributions, and risk factors.
     </div>
 </div>
 
 <div class="controls">
-    <h3>Step 6: Investment Decision Analysis</h3>
+    <h3>Step 6: Investor Returns Analysis</h3>
     <button onclick="calculateInvestorAnalysis()" class="btn-primary">Refresh Analysis</button>
 </div>
 
-<!-- THE CORE QUESTION: HERO SECTION -->
-<div class="section-title">THE CORE INVESTMENT DECISION</div>
+<!-- INVESTMENT SUMMARY -->
+<div class="section-title">INVESTMENT SUMMARY</div>
 
 <div style="background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%); border: 2px solid #dee2e6; border-radius: 8px; padding: 30px; margin-bottom: 30px;">
     <h3 style="text-align: center; font-size: 16px; font-weight: 600; color: #2c3e50; margin: 0 0 25px 0;">
-        YOUR $<span id="heroInvestmentAmount">200,000</span> INVESTMENT
+        YOUR $<span id="heroInvestmentAmount">200,000</span> MINING INVESTMENT
     </h3>
-    
-    <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 20px; align-items: center;">
-        <!-- Option A: Buy BTC -->
-        <div style="background: #fff3cd; border: 3px solid #ffc107; border-radius: 8px; padding: 25px; text-align: center;">
-            <div style="font-size: 13px; font-weight: 600; color: #856404; margin-bottom: 15px; text-transform: uppercase;">
-                OPTION A: BUY BTC TODAY
-            </div>
-            <div style="font-size: 32px; font-weight: 700; color: #f39c12; margin-bottom: 10px;" id="heroBuyBtc">
-                0.0000 BTC
-            </div>
-            <div style="font-size: 11px; color: #6c757d; margin-bottom: 15px;">
-                @ $<span id="heroBuyPrice">104,337</span> per BTC
-            </div>
-            <div style="background: white; padding: 12px; border-radius: 4px; margin-top: 10px;">
-                <div style="font-size: 10px; color: #6c757d; margin-bottom: 4px;">5-YEAR VALUE</div>
-                <div style="font-size: 20px; font-weight: 700; color: #2c3e50;" id="heroBuyValue">$0</div>
-            </div>
-            <div style="margin-top: 12px; padding: 8px; background: rgba(255, 255, 255, 0.7); border-radius: 4px;">
-                <div style="font-size: 10px; color: #6c757d;">ROI</div>
-                <div style="font-size: 16px; font-weight: 600;" id="heroBuyRoi">0%</div>
-            </div>
+
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 25px;">
+        <!-- Expected BTC Earned -->
+        <div style="background: white; border: 2px solid #2d6a4f; border-radius: 8px; padding: 20px; text-align: center;">
+            <div style="font-size: 10px; color: #6c757d; margin-bottom: 8px; text-transform: uppercase;">BTC Earned (5 Years)</div>
+            <div style="font-size: 28px; font-weight: 700; color: #2d6a4f;" id="heroMineBtc">0.0000 BTC</div>
+            <div style="font-size: 10px; color: #6c757d; margin-top: 8px;">Your profit share</div>
         </div>
 
-        <!-- VS Divider -->
-        <div style="text-align: center;">
-            <div style="font-size: 24px; font-weight: 700; color: #adb5bd;">VS</div>
+        <!-- 5-Year Value -->
+        <div style="background: white; border: 2px solid #3498db; border-radius: 8px; padding: 20px; text-align: center;">
+            <div style="font-size: 10px; color: #6c757d; margin-bottom: 8px; text-transform: uppercase;">5-Year Total Value</div>
+            <div style="font-size: 28px; font-weight: 700; color: #3498db;" id="heroMineValue">$0</div>
+            <div style="font-size: 10px; color: #6c757d; margin-top: 8px;">BTC value at Year 5</div>
         </div>
 
-        <!-- Option B: Mine -->
-        <div style="background: #d4edda; border: 3px solid #2d6a4f; border-radius: 8px; padding: 25px; text-align: center;">
-            <div style="font-size: 13px; font-weight: 600; color: #155724; margin-bottom: 15px; text-transform: uppercase;">
-                OPTION B: INVEST IN MINING
-            </div>
-            <div style="font-size: 32px; font-weight: 700; color: #2d6a4f; margin-bottom: 10px;" id="heroMineBtc">
-                0.0000 BTC
-            </div>
-            <div style="font-size: 11px; color: #6c757d; margin-bottom: 15px;">
-                <span id="heroMineUnits">20.0</span>% of LP pool @ <span id="heroMineShare">12.0</span>% profit share
-            </div>
-            <div style="background: white; padding: 12px; border-radius: 4px; margin-top: 10px;">
-                <div style="font-size: 10px; color: #6c757d; margin-bottom: 4px;">5-YEAR VALUE</div>
-                <div style="font-size: 20px; font-weight: 700; color: #2c3e50;" id="heroMineValue">$0</div>
-            </div>
-            <div style="margin-top: 12px; padding: 8px; background: rgba(255, 255, 255, 0.7); border-radius: 4px;">
-                <div style="font-size: 10px; color: #6c757d;">ROI</div>
-                <div style="font-size: 16px; font-weight: 600;" id="heroMineRoi">0%</div>
-            </div>
+        <!-- ROI -->
+        <div style="background: white; border: 2px solid #f39c12; border-radius: 8px; padding: 20px; text-align: center;">
+            <div style="font-size: 10px; color: #6c757d; margin-bottom: 8px; text-transform: uppercase;">Return on Investment</div>
+            <div style="font-size: 28px; font-weight: 700; color: #f39c12;" id="heroMineRoi">0%</div>
+            <div style="font-size: 10px; color: #6c757d; margin-top: 8px;">5-year ROI</div>
+        </div>
+
+        <!-- LP Structure -->
+        <div style="background: white; border: 2px solid #6c757d; border-radius: 8px; padding: 20px; text-align: center;">
+            <div style="font-size: 10px; color: #6c757d; margin-bottom: 8px; text-transform: uppercase;">Profit Share</div>
+            <div style="font-size: 28px; font-weight: 700; color: #6c757d;"><span id="heroMineShare">12.0</span>%</div>
+            <div style="font-size: 10px; color: #6c757d; margin-top: 8px;"><span id="heroMineUnits">20.0</span>% of LP pool</div>
         </div>
     </div>
 
-    <!-- Winner Banner -->
-    <div id="heroWinnerBanner" style="margin-top: 25px; padding: 20px; border-radius: 8px; text-align: center; background: #f8f9fa; border: 2px solid #dee2e6;">
-        <div style="font-size: 14px; font-weight: 600; color: #6c757d; margin-bottom: 8px;">RECOMMENDATION</div>
-        <div style="font-size: 24px; font-weight: 700; color: #2c3e50;" id="heroWinnerText">RUN ANALYSIS</div>
-        <div style="font-size: 12px; color: #6c757d; margin-top: 8px;" id="heroWinnerReason">Click "Refresh Analysis" to see recommendation</div>
+    <!-- Key Investment Terms -->
+    <div style="background: #e8f4fd; border-left: 4px solid #3498db; padding: 15px; border-radius: 4px;">
+        <div style="font-size: 11px; font-weight: 600; color: #0c5460; margin-bottom: 8px;">INVESTMENT STRUCTURE</div>
+        <div style="font-size: 10px; color: #495057; line-height: 1.6;">
+            <strong>Capital:</strong> $<span id="investorCapitalDisplay2">200,000</span> •
+            <strong>Structure:</strong> Limited Partner (LP) •
+            <strong>Term:</strong> 5 years •
+            <strong>Distributions:</strong> Proportional to BTC mined
+        </div>
     </div>
 </div>
 
-<!-- SCENARIO MATRIX -->
-<div class="section-title">SCENARIO ANALYSIS: BUY vs MINE ACROSS BTC PRICES</div>
+<!-- SENSITIVITY ANALYSIS -->
+<div class="section-title">SENSITIVITY ANALYSIS: RETURNS ACROSS BTC PRICE SCENARIOS</div>
 
 <div style="background: #e8f4fd; border-left: 4px solid #3498db; padding: 12px 15px; margin-bottom: 15px; font-size: 11px; color: #495057;">
-    <strong>How to read:</strong> This table shows which strategy wins at different BTC prices. Green = Mining wins, Yellow = Buy wins, Gray = Similar results.
+    <strong>How to read:</strong> This table shows your expected mining returns at different Year 5 BTC price scenarios, helping you understand upside potential and downside risk.
 </div>
 
 <table id="scenarioComparisonTable">
     <thead>
         <tr>
-            <th>BTC Price</th>
-            <th class="number">Buy: BTC Owned</th>
-            <th class="number">Buy: 5Y Value</th>
-            <th class="number">Buy: ROI</th>
-            <th class="number">Mine: BTC Earned</th>
-            <th class="number">Mine: 5Y Value</th>
-            <th class="number">Mine: ROI</th>
-            <th>Winner</th>
-            <th class="number">Advantage</th>
+            <th>Scenario</th>
+            <th>Year 5 BTC Price</th>
+            <th class="number">BTC Earned</th>
+            <th class="number">Total Value</th>
+            <th class="number">ROI</th>
+            <th class="number">Multiple on Capital</th>
+            <th>Outcome</th>
         </tr>
     </thead>
     <tbody>
         <tr>
-            <td colspan="9" class="text-center text-muted">Run analysis to see scenarios</td>
+            <td colspan="7" class="text-center text-muted">Run analysis to see scenarios</td>
         </tr>
     </tbody>
 </table>

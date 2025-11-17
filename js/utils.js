@@ -97,6 +97,58 @@ function getEquipmentValue(capex, year) {
     return capex * CONSTANTS.DEPRECIATION_SCHEDULE[year - 1];
 }
 
+/**
+ * Calculate realistic equipment residual value by component
+ * Mining ASICs depreciate rapidly, infrastructure holds value better
+ * @param {number} totalCapex - Total capital expenditure
+ * @param {Object} capexBreakdown - Optional detailed breakdown
+ * @returns {number} Realistic residual value after 5 years
+ */
+function calculateRealisticResidualValue(totalCapex, capexBreakdown = null) {
+    // If we have detailed breakdown, use it
+    if (capexBreakdown) {
+        const minerResidual = capexBreakdown.miners * 0.05;        // 5% - ASICs depreciate fast
+        const generatorResidual = capexBreakdown.generators * 0.45; // 45% - Generators hold value
+        const infraResidual = capexBreakdown.infrastructure * 0.30; // 30% - Infrastructure moderate
+        return minerResidual + generatorResidual + infraResidual;
+    }
+
+    // Otherwise use industry-standard breakdown estimates
+    // Typical mining CAPEX: 35% miners, 30% generators, 35% infrastructure
+    const minerPortion = totalCapex * 0.35;
+    const generatorPortion = totalCapex * 0.30;
+    const infraPortion = totalCapex * 0.35;
+
+    return (minerPortion * 0.05) + (generatorPortion * 0.45) + (infraPortion * 0.30);
+}
+
+// ============================================================================
+// SECURITY UTILITIES
+// ============================================================================
+
+/**
+ * Escape HTML to prevent XSS attacks
+ * @param {string} str - String to escape
+ * @returns {string} HTML-safe string
+ */
+function escapeHtml(str) {
+    if (typeof str !== 'string') return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+/**
+ * Sanitize numeric input to prevent injection
+ * @param {any} value - Value to sanitize
+ * @param {number} defaultValue - Default if invalid
+ * @returns {number} Safe numeric value
+ */
+function sanitizeNumeric(value, defaultValue = 0) {
+    const num = parseFloat(value);
+    return isNaN(num) ? defaultValue : num;
+}
+
 // ============================================================================
 // FORMATTING UTILITIES
 // ============================================================================
@@ -203,6 +255,9 @@ if (typeof module !== 'undefined' && module.exports) {
         calculateIRRSimplified,
         calculateOpexWithInflation,
         getEquipmentValue,
+        calculateRealisticResidualValue,
+        escapeHtml,
+        sanitizeNumeric,
         formatCurrency,
         formatBTC,
         formatPercent,

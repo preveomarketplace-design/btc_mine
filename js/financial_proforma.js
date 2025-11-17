@@ -32,17 +32,59 @@ function getProFormaBtcPrices() {
 /**
  * Update Pro Forma Income Statement Table
  */
+/**
+ * Get detailed OPEX breakdown from Step 4 actual inputs
+ */
+function getDetailedOpexBreakdown() {
+    // Energy & Fuel category
+    const gas = parseFloat(document.getElementById('opex_gas')?.value) || 0;
+    const additives = parseFloat(document.getElementById('opex_additives')?.value) || 0;
+    const energyTotal = gas + additives;
+
+    // Maintenance & Operations category
+    const genMaint = parseFloat(document.getElementById('opex_gen_maint')?.value) || 0;
+    const minerMaint = parseFloat(document.getElementById('opex_miner_maint')?.value) || 0;
+    const facility = parseFloat(document.getElementById('opex_facility')?.value) || 0;
+    const spares = parseFloat(document.getElementById('opex_spares')?.value) || 0;
+    const maintenanceTotal = genMaint + minerMaint + facility + spares;
+
+    // Other categories
+    const personnel = (parseFloat(document.getElementById('opex_manager')?.value) || 0) +
+                     (parseFloat(document.getElementById('opex_monitoring')?.value) || 0);
+    const connectivity = (parseFloat(document.getElementById('opex_internet')?.value) || 0) +
+                        (parseFloat(document.getElementById('opex_pool')?.value) || 0) +
+                        (parseFloat(document.getElementById('opex_software')?.value) || 0);
+    const insurance = (parseFloat(document.getElementById('opex_insurance')?.value) || 0) +
+                     (parseFloat(document.getElementById('opex_liability')?.value) || 0) +
+                     (parseFloat(document.getElementById('opex_permits')?.value) || 0);
+    const security = (parseFloat(document.getElementById('opex_security')?.value) || 0) +
+                    (parseFloat(document.getElementById('opex_contingency')?.value) || 0);
+
+    return {
+        energy: energyTotal,
+        maintenance: maintenanceTotal,
+        personnel,
+        connectivity,
+        insurance,
+        security,
+        total: energyTotal + maintenanceTotal + personnel + connectivity + insurance + security
+    };
+}
+
 function updateProFormaIncomeStatement(projections, yearlyPrices) {
     console.log('Updating Pro Forma Income Statement...', {projections, yearlyPrices});
-    
+
     if (!projections || !projections.yearlyData || projections.yearlyData.length === 0) {
         console.error('No projection data available');
         return;
     }
-    
+
     const data = projections.yearlyData;
-    const opexEnergy = projectData.totalOpex * 0.6; // Assume 60% energy
-    const opexMaint = projectData.totalOpex * 0.4;  // Assume 40% maintenance
+
+    // Get actual OPEX breakdown from Step 4 inputs (not generic 60/40 split)
+    const opexBreakdown = getDetailedOpexBreakdown();
+    const opexEnergy = opexBreakdown.energy;
+    const opexMaint = opexBreakdown.maintenance;
     
     let totalRevenue = 0, totalBtc = 0, totalOpex = 0, totalEbitda = 0;
     let totalOpexEnergy = 0, totalOpexMaint = 0;
@@ -120,11 +162,15 @@ function updateProFormaIncomeStatement(projections, yearlyPrices) {
  */
 function updateProFormaCashFlow(projections) {
     console.log('Updating Cash Flow Statement...');
-    
+
     if (!projections || !projections.yearlyData) return;
-    
+
     const data = projections.yearlyData;
-    const equipmentResidual = projectData.totalCapex * 0.25; // 25% residual
+
+    // Use realistic residual value calculation (miners depreciate more than infrastructure)
+    const equipmentResidual = typeof calculateRealisticResidualValue === 'function'
+        ? calculateRealisticResidualValue(projectData.totalCapex)
+        : projectData.totalCapex * 0.27; // Fallback: ~27% weighted average
     
     let cumulativeCF = -projectData.totalCapex;
     let totalFCF = 0;
@@ -308,20 +354,23 @@ function createRevenueEbitdaChart(projections) {
  */
 function createOpexBreakdownChart(projections) {
     console.log('Creating OPEX Breakdown Chart...');
-    
+
     const ctx = document.getElementById('opexBreakdownChart');
     if (!ctx) {
         console.error('❌ Canvas opexBreakdownChart not found!');
         return;
     }
-    
+
     if (window.opexBreakdownChart) {
         window.opexBreakdownChart.destroy();
     }
-    
+
+    // Use actual OPEX breakdown from Step 4
+    const opexBreakdown = getDetailedOpexBreakdown();
+
     const years = projections.yearlyData.map(d => `Year ${d.year}`);
-    const opexEnergy = projections.yearlyData.map(() => (projectData.totalOpex * 0.6) / 1000);
-    const opexMaint = projections.yearlyData.map(() => (projectData.totalOpex * 0.4) / 1000);
+    const opexEnergy = projections.yearlyData.map(() => opexBreakdown.energy / 1000);
+    const opexMaint = projections.yearlyData.map(() => opexBreakdown.maintenance / 1000);
     
     window.opexBreakdownChart = new Chart(ctx, {
         type: 'bar',

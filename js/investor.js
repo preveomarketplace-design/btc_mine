@@ -117,69 +117,34 @@ function getYearlyPrices(baseBtcPrice) {
 }
 
 // ============================================================================
-// HERO SECTION: The Core Decision
+// INVESTMENT SUMMARY: Simplified Focus on Mining Returns
 // ============================================================================
 
 function updateHeroSection(btcPrice, difficultyGrowth, uptime, yearlyPrices, structure) {
     const investorCapital = structure.investorCapital;
-    const finalPrice = yearlyPrices[4];
-    
-    // Option A: Buy BTC Today (at Year 0 base price)
-    const btcIfBuy = investorCapital / btcPrice;
-    const buyEndValue = btcIfBuy * finalPrice;
-    const buyRoi = ((buyEndValue - investorCapital) / investorCapital) * 100;
-    
-    // Option B: Mining
+
+    // Calculate Mining Returns
     const miningResult = calculateLpMiningReturns(btcPrice, difficultyGrowth, uptime, yearlyPrices, structure);
     const mineEndValue = miningResult.totalValue;
     const mineRoi = miningResult.roi;
-    
-    // Update Hero Display
+    const multiple = mineEndValue / investorCapital;
+
+    // Update Display Elements
     safeUpdateElement('heroInvestmentAmount', investorCapital.toLocaleString());
-    
-    safeUpdateElement('heroBuyBtc', btcIfBuy.toFixed(4) + ' BTC');
-    safeUpdateElement('heroBuyPrice', btcPrice.toLocaleString());
-    safeUpdateElement('heroBuyValue', '$' + formatNumber(buyEndValue));
-    safeUpdateElement('heroBuyRoi', buyRoi.toFixed(1) + '%');
-    
+    safeUpdateElement('investorCapitalDisplay2', investorCapital.toLocaleString());
+
     safeUpdateElement('heroMineBtc', miningResult.lpBtcEarned.toFixed(4) + ' BTC');
     safeUpdateElement('heroMineUnits', structure.investorLpSharePercent.toFixed(1));
     safeUpdateElement('heroMineShare', structure.investorProfitSharePercent.toFixed(1));
     safeUpdateElement('heroMineValue', '$' + formatNumber(mineEndValue));
     safeUpdateElement('heroMineRoi', mineRoi.toFixed(1) + '%');
-    
-    // Determine Winner
-    const banner = document.getElementById('heroWinnerBanner');
-    const winnerText = document.getElementById('heroWinnerText');
-    const winnerReason = document.getElementById('heroWinnerReason');
-    
-    const edge = ((mineEndValue / buyEndValue) - 1) * 100;
-    
-    if (edge > 10) {
-        // Mining Wins
-        banner.style.background = 'linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%)';
-        banner.style.border = '3px solid #2d6a4f';
-        winnerText.textContent = 'MINING WINS';
-        winnerText.style.color = '#2d6a4f';
-        winnerReason.textContent = `Mining generates ${Math.abs(edge).toFixed(1)}% more value than buying BTC`;
-        winnerReason.style.color = '#155724';
-    } else if (edge < -10) {
-        // Buy Wins
-        banner.style.background = 'linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%)';
-        banner.style.border = '3px solid #ffc107';
-        winnerText.textContent = 'BUY BTC WINS';
-        winnerText.style.color = '#f39c12';
-        winnerReason.textContent = `Buying BTC generates ${Math.abs(edge).toFixed(1)}% more value than mining`;
-        winnerReason.style.color = '#856404';
-    } else {
-        // Tie
-        banner.style.background = 'linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%)';
-        banner.style.border = '3px solid #adb5bd';
-        winnerText.textContent = 'SIMILAR RESULTS';
-        winnerText.style.color = '#6c757d';
-        winnerReason.textContent = `Both strategies yield similar returns (within ${Math.abs(edge).toFixed(1)}%)`;
-        winnerReason.style.color = '#495057';
-    }
+
+    console.log('✅ Investment summary updated:', {
+        btcEarned: miningResult.lpBtcEarned.toFixed(4),
+        endValue: mineEndValue,
+        roi: mineRoi.toFixed(1) + '%',
+        multiple: multiple.toFixed(2) + 'x'
+    });
 }
 
 function calculateLpMiningReturns(btcPrice, difficultyGrowth, uptime, yearlyPrices, structure) {
