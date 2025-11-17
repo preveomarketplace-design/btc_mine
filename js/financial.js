@@ -102,31 +102,40 @@ function calculateInvestmentReturns() {
 function getInvestmentStructure() {
     const splitValue = document.getElementById('gpLpSplit')?.value || '40-60';
     const [gpPercent, lpPercent] = splitValue.split('-').map(v => parseInt(v));
-    
+
     const totalLpCapital = parseFloat(document.getElementById('totalLpCapital')?.value) || 0;
     const investorCapital = parseFloat(document.getElementById('investorCapital')?.value) || 0;
     const totalCapex = projectData.totalCapex;
-    
+
+    console.log('getInvestmentStructure inputs:', {
+        splitValue,
+        gpPercent,
+        lpPercent,
+        totalLpCapital,
+        investorCapital,
+        totalCapex
+    });
+
     // If no LP capital or owner-operator mode
     const isOwnerOperator = totalLpCapital === 0 || splitValue === '100-0';
-    
+
     let gpCapital, investorLpSharePercent, investorProfitSharePercent;
-    
+
     if (isOwnerOperator) {
         gpCapital = totalCapex;
         investorLpSharePercent = 0;
         investorProfitSharePercent = 100; // Owner gets 100% of profits
     } else {
         gpCapital = totalCapex - totalLpCapital;
-        
+
         // Investor's share of LP pool
         investorLpSharePercent = totalLpCapital > 0 ? (investorCapital / totalLpCapital) * 100 : 0;
-        
+
         // Investor's share of total profits = (their LP%) — (LP pool's profit%)
         investorProfitSharePercent = (investorLpSharePercent / 100) * lpPercent;
     }
-    
-    return {
+
+    const result = {
         gpPercent: isOwnerOperator ? 100 : gpPercent,
         lpPercent: isOwnerOperator ? 0 : lpPercent,
         totalLpCapital,
@@ -137,6 +146,10 @@ function getInvestmentStructure() {
         totalCapex,
         isOwnerOperator
     };
+
+    console.log('getInvestmentStructure result:', result);
+
+    return result;
 }
 
 function getFinancialInputs() {
@@ -389,10 +402,18 @@ function updateLpReturns(lp, structure) {
 }
 
 function updateGpReturns(gp, structure) {
+    console.log('updateGpReturns called with:', {gp, structure});
+
     if (!gp || gp.investment === undefined) {
         console.warn('GP returns data is undefined');
         return;
     }
+
+    console.log('GP values:', {
+        gpPercent: structure.gpPercent,
+        totalReturn: gp.totalReturn,
+        lpPercent: structure.lpPercent
+    });
 
     safeUpdateElement('gpShare', (structure.gpPercent || 0) + '%');
     safeUpdateElement('gpProfit', '$' + (gp.totalReturn || 0).toLocaleString(undefined, {maximumFractionDigits: 0}));
