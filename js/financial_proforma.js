@@ -2,6 +2,32 @@
 // This version ensures charts render correctly and integrates properly
 
 /**
+ * Wait for DOM element to be available
+ * @param {string} elementId - ID of element to wait for
+ * @param {number} maxAttempts - Maximum number of attempts
+ * @returns {Promise<HTMLElement>}
+ */
+function waitForElement(elementId, maxAttempts = 10) {
+    return new Promise((resolve, reject) => {
+        let attempts = 0;
+        const checkElement = () => {
+            const element = document.getElementById(elementId);
+            if (element) {
+                console.log(`✅ Element ${elementId} found after ${attempts} attempts`);
+                resolve(element);
+            } else if (attempts >= maxAttempts) {
+                console.error(`❌ Element ${elementId} not found after ${maxAttempts} attempts`);
+                reject(new Error(`Element ${elementId} not found`));
+            } else {
+                attempts++;
+                setTimeout(checkElement, 100);
+            }
+        };
+        checkElement();
+    });
+}
+
+/**
  * Get BTC prices from user inputs (5 years)
  */
 function getProFormaBtcPrices() {
@@ -212,15 +238,22 @@ function updateKeyMetrics(projections, inputs) {
  */
 function createRevenueEbitdaChart(projections) {
     console.log('Creating Revenue & EBITDA Chart...');
-    
-    const ctx = document.getElementById('revenueEbitdaChart');
-    if (!ctx) {
-        console.error('❌ Canvas revenueEbitdaChart not found!');
+
+    const canvas = document.getElementById('revenueEbitdaChart');
+    if (!canvas) {
+        console.error('❌ Canvas revenueEbitdaChart not found in DOM!');
+        console.log('Available canvases:', Array.from(document.querySelectorAll('canvas')).map(c => c.id));
         return;
     }
-    
+
     if (!window.Chart) {
         console.error('❌ Chart.js not loaded!');
+        return;
+    }
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+        console.error('❌ Could not get 2D context from canvas!');
         return;
     }
     
@@ -308,10 +341,16 @@ function createRevenueEbitdaChart(projections) {
  */
 function createOpexBreakdownChart(projections) {
     console.log('Creating OPEX Breakdown Chart...');
-    
-    const ctx = document.getElementById('opexBreakdownChart');
+
+    const canvas = document.getElementById('opexBreakdownChart');
+    if (!canvas) {
+        console.error('❌ Canvas opexBreakdownChart not found in DOM!');
+        return;
+    }
+
+    const ctx = canvas.getContext('2d');
     if (!ctx) {
-        console.error('❌ Canvas opexBreakdownChart not found!');
+        console.error('❌ Could not get 2D context from canvas!');
         return;
     }
     
@@ -389,10 +428,16 @@ function createOpexBreakdownChart(projections) {
  */
 function createCumulativeCashFlowChart(projections) {
     console.log('Creating Cumulative Cash Flow Chart...');
-    
-    const ctx = document.getElementById('cumulativeCashFlowChart');
+
+    const canvas = document.getElementById('cumulativeCashFlowChart');
+    if (!canvas) {
+        console.error('❌ Canvas cumulativeCashFlowChart not found in DOM!');
+        return;
+    }
+
+    const ctx = canvas.getContext('2d');
     if (!ctx) {
-        console.error('❌ Canvas cumulativeCashFlowChart not found!');
+        console.error('❌ Could not get 2D context from canvas!');
         return;
     }
     
@@ -493,10 +538,16 @@ function createCumulativeCashFlowChart(projections) {
  */
 function createEbitdaMarginChart(projections) {
     console.log('Creating EBITDA Margin Chart...');
-    
-    const ctx = document.getElementById('ebitdaMarginChart');
+
+    const canvas = document.getElementById('ebitdaMarginChart');
+    if (!canvas) {
+        console.error('❌ Canvas ebitdaMarginChart not found in DOM!');
+        return;
+    }
+
+    const ctx = canvas.getContext('2d');
     if (!ctx) {
-        console.error('❌ Canvas ebitdaMarginChart not found!');
+        console.error('❌ Could not get 2D context from canvas!');
         return;
     }
     
@@ -594,13 +645,33 @@ function updateProFormaReport(projections, inputs) {
     updateProFormaCashFlow(projections);
     updateKeyMetrics(projections, inputs);
     
-    // Create all charts (with delays to ensure DOM is ready)
-    setTimeout(() => {
-        createRevenueEbitdaChart(projections);
-        createOpexBreakdownChart(projections);
-        createCumulativeCashFlowChart(projections);
-        createEbitdaMarginChart(projections);
-    }, 100);
+    // Create all charts - wait for DOM elements to be available
+    console.log('Scheduling chart creation...');
+
+    // Use requestAnimationFrame to ensure DOM is painted
+    requestAnimationFrame(() => {
+        setTimeout(async () => {
+            console.log('Attempting to create charts...');
+            try {
+                // Wait for first canvas to ensure DOM is ready
+                await waitForElement('revenueEbitdaChart', 20);
+
+                // Create all charts
+                createRevenueEbitdaChart(projections);
+                createOpexBreakdownChart(projections);
+                createCumulativeCashFlowChart(projections);
+                createEbitdaMarginChart(projections);
+
+                console.log('✅ All charts created successfully');
+            } catch (error) {
+                console.error('❌ Chart creation failed:', error);
+                console.log('DOM State:', {
+                    step5Content: document.getElementById('step5-content'),
+                    canvasElements: Array.from(document.querySelectorAll('canvas')).map(c => c.id)
+                });
+            }
+        }, 200);
+    });
     
     console.log('✅ Pro Forma Report update complete');
 }

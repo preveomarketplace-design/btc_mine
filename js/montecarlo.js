@@ -621,9 +621,25 @@ function createDistributionChart(results) {
     const numBins = 30;
     const buyHist = createHistogram(results.buyResults, numBins);
     const mineHist = createHistogram(results.mineResults, numBins);
-    
+
     // === BUY BTC CHART ===
-    const ctxBuy = document.getElementById('buyDistributionChart').getContext('2d');
+    const buyCanvas = document.getElementById('buyDistributionChart');
+    if (!buyCanvas) {
+        console.error('❌ Canvas buyDistributionChart not found in DOM!');
+        console.log('Available canvases:', Array.from(document.querySelectorAll('canvas')).map(c => c.id));
+        return;
+    }
+
+    if (!window.Chart) {
+        console.error('❌ Chart.js not loaded for Monte Carlo charts!');
+        return;
+    }
+
+    const ctxBuy = buyCanvas.getContext('2d');
+    if (!ctxBuy) {
+        console.error('❌ Could not get 2D context from buyDistributionChart!');
+        return;
+    }
     
     // Destroy existing chart if it exists
     if (window.mcBuyChart) {
@@ -707,7 +723,17 @@ function createDistributionChart(results) {
     });
     
     // === MINE BTC CHART ===
-    const ctxMine = document.getElementById('mineDistributionChart').getContext('2d');
+    const mineCanvas = document.getElementById('mineDistributionChart');
+    if (!mineCanvas) {
+        console.error('❌ Canvas mineDistributionChart not found in DOM!');
+        return;
+    }
+
+    const ctxMine = mineCanvas.getContext('2d');
+    if (!ctxMine) {
+        console.error('❌ Could not get 2D context from mineDistributionChart!');
+        return;
+    }
     
     // Destroy existing chart if it exists
     if (window.mcMineChart) {
