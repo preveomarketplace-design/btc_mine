@@ -102,10 +102,17 @@ function calculateInvestmentReturns() {
 function getInvestmentStructure() {
     const splitValue = document.getElementById('gpLpSplit')?.value || '40-60';
     const [gpPercent, lpPercent] = splitValue.split('-').map(v => parseInt(v));
-    
+
     const totalLpCapital = parseFloat(document.getElementById('totalLpCapital')?.value) || 0;
     const investorCapital = parseFloat(document.getElementById('investorCapital')?.value) || 0;
     const totalCapex = projectData.totalCapex;
+
+    console.log('Investment Structure Inputs:', {
+        totalLpCapital,
+        investorCapital,
+        splitValue,
+        totalCapex
+    });
     
     // If no LP capital or owner-operator mode
     const isOwnerOperator = totalLpCapital === 0 || splitValue === '100-0';
@@ -377,7 +384,14 @@ function updateLpReturns(lp, structure) {
         console.warn('LP returns data is undefined');
         return;
     }
-    
+
+    console.log('Updating LP Returns:', {
+        investment: lp.investment,
+        totalReturn: lp.totalReturn,
+        roi: lp.roi,
+        btcEarned: lp.btcEarned
+    });
+
     safeUpdateElement('lpInvestmentAmount', '$' + (lp.investment || 0).toLocaleString());
     safeUpdateElement('lpBtcEarned', (lp.btcEarned || 0).toFixed(4) + ' BTC');
     safeUpdateElement('lpTotalReturn', '$' + (lp.totalReturn || 0).toLocaleString(undefined, {maximumFractionDigits: 0}));
