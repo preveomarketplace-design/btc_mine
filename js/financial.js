@@ -188,61 +188,90 @@ function calculateYearlyProjections(inputs, yearlyPrices) {
     const networkHashrate = inputs.networkHashrateEH * 1000;
     const startYear = projectData.startYear || 2026;
     const annualDepreciation = projectData.totalCapex / CONSTANTS.DEPRECIATION_YEARS;
-    
+
+    // Get BTC distribution strategy
+    const distribution = getBtcDistribution();
+
     let cumulative = opsOnlyMode ? 0 : -projectData.totalCapex;
     let totalRevenue = 0;
     let totalOpex5Year = 0;
     let totalBtcMined = 0;
+    let totalBtcSold = 0;
+    let totalBtcToGp = 0;
+    let totalBtcToLp = 0;
     let npv = opsOnlyMode ? 0 : -projectData.totalCapex;
     let paybackYear = 0;
-    
+
     const yearlyData = [];
-    
+
     for(let year = 1; year <= 5; year++) {
         const calendarYear = startYear + year - 1;
         const reward = getBlockReward(calendarYear);
         const difficultyFactor = Math.pow(1 + inputs.difficultyGrowth, year - 1);
         const effectiveHashrate = hashratePH / difficultyFactor;
         const networkShare = effectiveHashrate / networkHashrate;
-        
+
         const btcMined = networkShare * CONSTANTS.BLOCKS_PER_YEAR * reward * inputs.uptime;
         totalBtcMined += btcMined;
-        
+
+        // BTC Distribution
+        const btcSold = btcMined * (distribution.sellPercent / 100);
+        const btcToGp = btcMined * (distribution.gpPercent / 100);
+        const btcToLp = btcMined * (distribution.lpPercent / 100);
+
+        totalBtcSold += btcSold;
+        totalBtcToGp += btcToGp;
+        totalBtcToLp += btcToLp;
+
         const yearPrice = yearlyPrices[year - 1];
+        const btcSaleProceeds = btcSold * yearPrice;
         const revenue = btcMined * yearPrice;
         totalRevenue += revenue;
-        
-        const opex = projectData.totalOpex * Math.pow(1 + CONSTANTS.DEFAULT_OPEX_INFLATION, year - 1);
+
+        const opex = calculateInflatedOpex(projectData.totalOpex, year);
         totalOpex5Year += opex;
-        
+
+        // OPEX Coverage Check
+        const opexCovered = btcSaleProceeds >= opex;
+        const opexShortfall = opexCovered ? 0 : opex - btcSaleProceeds;
+
         const netOpsFlow = revenue - opex;
         const cashFlow = netOpsFlow + annualDepreciation;
         cumulative += cashFlow;
-        
+
         const discountFactor = Math.pow(1 + inputs.discountRate, year);
         npv += cashFlow / discountFactor;
-        
+
         if (cumulative > 0 && paybackYear === 0) {
             paybackYear = year - 1 + (projectData.totalCapex - Math.abs(cumulative - cashFlow)) / cashFlow;
         }
-        
-        yearlyData.push({ 
-            year, 
+
+        yearlyData.push({
+            year,
             calendarYear,
-            btcMined, 
-            revenue, 
-            opex, 
-            cashFlow, 
+            btcMined,
+            btcSold,
+            btcToGp,
+            btcToLp,
+            btcSaleProceeds,
+            revenue,
+            opex,
+            opexCovered,
+            opexShortfall,
+            cashFlow,
             cumulative,
-            btcPrice: yearPrice 
+            btcPrice: yearPrice
         });
     }
-    
+
     return {
         yearlyData,
         totalRevenue,
         totalOpex5Year,
         totalBtcMined,
+        totalBtcSold,
+        totalBtcToGp,
+        totalBtcToLp,
         npv,
         paybackYear,
         cumulative,
@@ -252,18 +281,18 @@ function calculateYearlyProjections(inputs, yearlyPrices) {
 
 function calculateGpLpReturns(projections, structure, yearlyPrices) {
     const equipmentResidual = projectData.totalCapex * CONSTANTS.EQUIPMENT_RESIDUAL_PERCENT;
-    
+
     // Equipment residual split by capital contribution
     const gpEquipmentShare = (structure.gpCapital / structure.totalCapex) * equipmentResidual;
     const totalLpEquipmentShare = (structure.totalLpCapital / structure.totalCapex) * equipmentResidual;
     const investorEquipmentShare = (structure.investorCapital / structure.totalCapex) * equipmentResidual;
-    
-    // BTC split by profit share percentage
-    const gpBtcShare = projections.totalBtcMined * (structure.gpPercent / 100);
-    const totalLpBtcShare = projections.totalBtcMined * (structure.lpPercent / 100);
-    
-    // This investor's share = their % of LP pool — total LP BTC
-    const investorBtcShare = structure.totalLpCapital > 0 ? 
+
+    // Use actual BTC accumulated from distribution strategy
+    const gpBtcShare = projections.totalBtcToGp || 0;
+    const totalLpBtcShare = projections.totalBtcToLp || 0;
+
+    // This investor's share = their % of LP pool × total LP BTC
+    const investorBtcShare = structure.totalLpCapital > 0 ?
         (structure.investorCapital / structure.totalLpCapital) * totalLpBtcShare : 0;
     
     // Calculate final year BTC value
@@ -286,13 +315,13 @@ function calculateGpLpReturns(projections, structure, yearlyPrices) {
     // Year-by-year investor breakdown
     const lpYearly = [];
     let cumulativeInvestorBtc = 0;
-    
+
     projections.yearlyData.forEach((data, idx) => {
-        // Total LP pool gets lpPercent of BTC mined
-        const totalLpYearBtc = data.btcMined * (structure.lpPercent / 100);
-        
+        // Use actual LP BTC from distribution strategy
+        const totalLpYearBtc = data.btcToLp || 0;
+
         // This investor gets their share of LP pool
-        const investorYearBtc = structure.totalLpCapital > 0 ? 
+        const investorYearBtc = structure.totalLpCapital > 0 ?
             (structure.investorCapital / structure.totalLpCapital) * totalLpYearBtc : 0;
         
         cumulativeInvestorBtc += investorYearBtc;

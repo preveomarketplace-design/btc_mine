@@ -44,60 +44,86 @@ function updateAccumulationTable(projections, yearlyPrices) {
     const initialCapex = projectData.totalCapex;
     const equipmentResidualPercent = 0.25; // 25% residual value at year 5
 
-    let cumulativeBTC = 0;
+    let cumulativeGpBTC = 0;
+    let cumulativeLpBTC = 0;
+    let cumulativeSoldBTC = 0;
     let cumulativeOpex = 0;
 
     // Populate each year
     for (let i = 0; i < 5; i++) {
         const yearData = data[i] || {};
         const btcMined = yearData.btcMined || 0;
+        const btcSold = yearData.btcSold || 0;
+        const btcToGp = yearData.btcToGp || 0;
+        const btcToLp = yearData.btcToLp || 0;
+        const btcSaleProceeds = yearData.btcSaleProceeds || 0;
         const btcPrice = yearlyPrices[i] || 0;
-        const opex = yearData.opex || projectData.totalOpex || 0;
+        const opex = yearData.opex || 0;
+        const opexCovered = yearData.opexCovered || false;
 
-        // Accumulate BTC and OPEX
-        cumulativeBTC += btcMined;
+        // Accumulate
+        cumulativeGpBTC += btcToGp;
+        cumulativeLpBTC += btcToLp;
+        cumulativeSoldBTC += btcSold;
         cumulativeOpex += opex;
 
         // BTC mined this year
-        const btcEl = document.getElementById(`btc_y${i+1}`);
-        if (btcEl) btcEl.textContent = btcMined.toFixed(2);
+        safeUpdateElement(`btc_y${i+1}`, btcMined.toFixed(2));
 
-        // Cumulative BTC holdings
-        const cumBtcEl = document.getElementById(`cum_btc_y${i+1}`);
-        if (cumBtcEl) cumBtcEl.textContent = cumulativeBTC.toFixed(2) + ' BTC';
+        // BTC distribution breakdown
+        safeUpdateElement(`btc_sold_y${i+1}`, btcSold.toFixed(2));
+        safeUpdateElement(`btc_gp_y${i+1}`, btcToGp.toFixed(2));
+        safeUpdateElement(`btc_lp_y${i+1}`, btcToLp.toFixed(2));
+
+        // Cumulative holdings
+        safeUpdateElement(`cum_gp_y${i+1}`, cumulativeGpBTC.toFixed(2) + ' BTC');
+        safeUpdateElement(`cum_lp_y${i+1}`, cumulativeLpBTC.toFixed(2) + ' BTC');
+        safeUpdateElement(`cum_sold_y${i+1}`, cumulativeSoldBTC.toFixed(2) + ' BTC');
 
         // BTC price
-        const priceEl = document.getElementById(`price_y${i+1}`);
-        if (priceEl) priceEl.textContent = '$' + formatNumber(btcPrice);
+        safeUpdateElement(`price_y${i+1}`, '$' + formatNumber(btcPrice));
+
+        // OPEX Coverage Check
+        safeUpdateElement(`opex_req_y${i+1}`, '$' + formatNumber(opex));
+        safeUpdateElement(`opex_proceeds_y${i+1}`, '$' + formatNumber(btcSaleProceeds));
+
+        const statusEl = document.getElementById(`opex_status_y${i+1}`);
+        if (statusEl) {
+            if (opexCovered) {
+                const buffer = btcSaleProceeds - opex;
+                const bufferPercent = opex > 0 ? (buffer / opex * 100) : 0;
+                statusEl.textContent = `✓ +$${formatNumber(buffer)} (${bufferPercent.toFixed(0)}%)`;
+                statusEl.style.color = bufferPercent >= 5 ? '#2d6a4f' : '#f39c12';
+            } else {
+                const shortfall = opex - btcSaleProceeds;
+                statusEl.textContent = `⚠ -$${formatNumber(shortfall)}`;
+                statusEl.style.color = '#e74c3c';
+            }
+        }
 
         // EXIT SCENARIO CALCULATIONS
-        // Total BTC sale proceeds if exit at end of this year
-        const exitProceeds = cumulativeBTC * btcPrice;
-        const exitProceedsEl = document.getElementById(`exit_proceeds_y${i+1}`);
-        if (exitProceedsEl) exitProceedsEl.textContent = '$' + formatNumber(exitProceeds);
+        // Total BTC if exit: GP + LP accumulated (not sold)
+        const totalAccumulatedBTC = cumulativeGpBTC + cumulativeLpBTC;
+        const exitProceeds = totalAccumulatedBTC * btcPrice;
+        safeUpdateElement(`exit_proceeds_y${i+1}`, '$' + formatNumber(exitProceeds));
 
         // Cumulative OPEX paid through this year
-        const exitOpexEl = document.getElementById(`exit_opex_y${i+1}`);
-        if (exitOpexEl) exitOpexEl.textContent = '($' + formatNumber(cumulativeOpex) + ')';
+        safeUpdateElement(`exit_opex_y${i+1}`, '($' + formatNumber(cumulativeOpex) + ')');
 
         // Initial CAPEX (same for all years)
-        const exitCapexEl = document.getElementById(`exit_capex_y${i+1}`);
-        if (exitCapexEl) exitCapexEl.textContent = '($' + formatNumber(initialCapex) + ')';
+        safeUpdateElement(`exit_capex_y${i+1}`, '($' + formatNumber(initialCapex) + ')');
 
         // Equipment residual value - linear depreciation from 100% to 25% over 5 years
-        // Year 1: 85%, Year 2: 70%, Year 3: 55%, Year 4: 40%, Year 5: 25%
-        const depreciationRate = 0.75; // Depreciates by 75% over 5 years
+        const depreciationRate = 0.75;
         const residualPercent = 1 - (depreciationRate * (i + 1) / 5);
         const residualValue = initialCapex * residualPercent;
-        const exitResidualEl = document.getElementById(`exit_residual_y${i+1}`);
-        if (exitResidualEl) exitResidualEl.textContent = '$' + formatNumber(residualValue);
+        safeUpdateElement(`exit_residual_y${i+1}`, '$' + formatNumber(residualValue));
 
         // Net cash if exit this year
         const netCash = exitProceeds - cumulativeOpex - initialCapex + residualValue;
         const exitNetEl = document.getElementById(`exit_net_y${i+1}`);
         if (exitNetEl) {
             exitNetEl.textContent = (netCash >= 0 ? '$' : '($') + formatNumber(Math.abs(netCash)) + (netCash >= 0 ? '' : ')');
-            // Color code: green if positive, red if negative
             exitNetEl.style.color = netCash >= 0 ? '#2d6a4f' : '#e74c3c';
             exitNetEl.style.fontWeight = '700';
         }
@@ -107,7 +133,6 @@ function updateAccumulationTable(projections, yearlyPrices) {
         const exitRoiEl = document.getElementById(`exit_roi_y${i+1}`);
         if (exitRoiEl) {
             exitRoiEl.textContent = roi.toFixed(1) + '%';
-            // Color code: green if positive, red if negative
             exitRoiEl.style.color = roi >= 0 ? '#2d6a4f' : '#e74c3c';
             exitRoiEl.style.fontWeight = '700';
         }
@@ -895,18 +920,28 @@ function formatNumber(num) {
 }
 
 /**
+ * Safely update element text content
+ */
+function safeUpdateElement(id, text) {
+    const element = document.getElementById(id);
+    if (element) {
+        element.textContent = typeof text === 'string' ? text : String(text);
+    }
+}
+
+/**
  * Master function to update all pro forma sections
  */
 function updateProFormaReport(projections, inputs) {
     console.log('=== UPDATING PRO FORMA REPORT ===');
     console.log('Projections:', projections);
     console.log('Inputs:', inputs);
-    
+
     if (!projections || !projections.yearlyData) {
         console.error(' No projection data available!');
         return;
     }
-    
+
     // Get BTC prices from inputs
     const yearlyPrices = getProFormaBtcPrices();
 
@@ -914,7 +949,8 @@ function updateProFormaReport(projections, inputs) {
     updateAccumulationTable(projections, yearlyPrices);
     updateProFormaCashFlow(projections);
     updateKeyMetrics(projections, inputs);
-    
+    update5YearImpactSummary(projections, inputs);
+
     // Create all charts (with delays to ensure DOM is ready)
     setTimeout(() => {
         createBtcPositionChart(projections, yearlyPrices);
@@ -926,7 +962,7 @@ function updateProFormaReport(projections, inputs) {
 
     // Update sensitivity analysis
     updateSensitivityAnalysis(projections, inputs);
-    
+
     console.log(' Pro Forma Report update complete');
 }
 
@@ -986,6 +1022,254 @@ function updateSensitivityAnalysis(projections, inputs) {
     });
 
     console.log(' Sensitivity Analysis updated');
+}
+
+/**
+ * Update 5-Year Impact Summary
+ */
+function update5YearImpactSummary(projections, inputs) {
+    console.log('Updating 5-Year Impact Summary...');
+
+    if (!projections || !projections.yearlyData) {
+        return;
+    }
+
+    const showPV = document.getElementById('showPresentValue')?.checked || false;
+    const discountRate = inputs?.discountRate || 0.12;
+
+    // Total BTC mined
+    safeUpdateElement('summaryTotalBtc', projections.totalBtcMined.toFixed(2) + ' BTC');
+
+    // Sold BTC
+    const totalSoldBtc = projections.totalBtcSold || 0;
+    let totalSoldValue = 0;
+    let totalSoldValuePV = 0;
+
+    projections.yearlyData.forEach((data, i) => {
+        const soldValue = (data.btcSold || 0) * (data.btcPrice || 0);
+        totalSoldValue += soldValue;
+        totalSoldValuePV += calculatePresentValue(soldValue, i + 1, discountRate);
+    });
+
+    safeUpdateElement('summarySoldBtc', totalSoldBtc.toFixed(2) + ' BTC');
+    safeUpdateElement('summarySoldValue', '$' + (totalSoldValue / 1000000).toFixed(1) + 'M');
+    if (showPV) {
+        safeUpdateElement('summarySoldPv', 'PV: $' + (totalSoldValuePV / 1000000).toFixed(1) + 'M');
+    } else {
+        safeUpdateElement('summarySoldPv', '');
+    }
+
+    // LP Accumulated
+    const totalLpBtc = projections.totalBtcToLp || 0;
+    const finalYearPrice = projections.yearlyData[4]?.btcPrice || 0;
+    const lpValue = totalLpBtc * finalYearPrice;
+    const lpValuePV = calculatePresentValue(lpValue, 5, discountRate);
+
+    const lpCapital = parseFloat(document.getElementById('totalLpCapital')?.value) || 1000000;
+    const lpRoi = lpCapital > 0 ? ((lpValue - lpCapital) / lpCapital * 100) : 0;
+    const lpRoiPV = lpCapital > 0 ? ((lpValuePV - lpCapital) / lpCapital * 100) : 0;
+
+    safeUpdateElement('summaryLpBtc', totalLpBtc.toFixed(2) + ' BTC');
+    safeUpdateElement('summaryLpValue', '$' + (lpValue / 1000000).toFixed(1) + 'M' + (showPV ? ' / PV: $' + (lpValuePV / 1000000).toFixed(1) + 'M' : ''));
+    safeUpdateElement('summaryLpRoi', 'ROI: ' + lpRoi.toFixed(0) + '%' + (showPV ? ' / PV: ' + lpRoiPV.toFixed(0) + '%' : ''));
+
+    // GP Accumulated
+    const totalGpBtc = projections.totalBtcToGp || 0;
+    const gpValue = totalGpBtc * finalYearPrice;
+    const gpValuePV = calculatePresentValue(gpValue, 5, discountRate);
+
+    const gpCapital = projectData.totalCapex - lpCapital;
+    const gpRoi = gpCapital > 0 ? ((gpValue - gpCapital) / gpCapital * 100) : 0;
+    const gpRoiPV = gpCapital > 0 ? ((gpValuePV - gpCapital) / gpCapital * 100) : 0;
+
+    safeUpdateElement('summaryGpBtc', totalGpBtc.toFixed(2) + ' BTC');
+    safeUpdateElement('summaryGpValue', '$' + (gpValue / 1000000).toFixed(1) + 'M' + (showPV ? ' / PV: $' + (gpValuePV / 1000000).toFixed(1) + 'M' : ''));
+    safeUpdateElement('summaryGpRoi', 'ROI: ' + gpRoi.toFixed(0) + '%' + (showPV ? ' / PV: ' + gpRoiPV.toFixed(0) + '%' : ''));
+
+    // OPEX Coverage Status
+    const opexCoverageEl = document.getElementById('opexCoverageStatus');
+    if (opexCoverageEl) {
+        let allCovered = true;
+        let minBuffer = Infinity;
+        let worstYear = 0;
+
+        projections.yearlyData.forEach((data, i) => {
+            if (!data.opexCovered) {
+                allCovered = false;
+            }
+            if (data.opexCovered && data.opex > 0) {
+                const buffer = ((data.btcSaleProceeds - data.opex) / data.opex * 100);
+                if (buffer < minBuffer) {
+                    minBuffer = buffer;
+                    worstYear = i + 1;
+                }
+            }
+        });
+
+        if (allCovered) {
+            opexCoverageEl.style.background = minBuffer >= 5 ? '#d4edda' : '#fff3cd';
+            opexCoverageEl.style.border = minBuffer >= 5 ? '1px solid #2d6a4f' : '1px solid #f39c12';
+            opexCoverageEl.style.color = minBuffer >= 5 ? '#2d6a4f' : '#856404';
+            opexCoverageEl.textContent = `✅ OPEX Fully Covered All 5 Years (Min buffer: ${minBuffer.toFixed(0)}% in Year ${worstYear})`;
+        } else {
+            opexCoverageEl.style.background = '#fff5f5';
+            opexCoverageEl.style.border = '1px solid #e74c3c';
+            opexCoverageEl.style.color = '#e74c3c';
+            opexCoverageEl.textContent = '⚠️ WARNING: OPEX shortfall detected in one or more years. Review table above or increase "Sell for OPEX" percentage.';
+        }
+    }
+
+    console.log(' 5-Year Impact Summary updated');
+}
+
+// ============================================================================
+// BTC DISTRIBUTION STRATEGY FUNCTIONS
+// ============================================================================
+
+/**
+ * Apply preset distribution template
+ * @param {string} preset - 'conservative', 'balanced', or 'aggressive'
+ */
+function applyDistributionPreset(preset) {
+    let sellPercent, lpPercent, gpPercent;
+
+    switch(preset) {
+        case 'conservative':
+            sellPercent = 40;
+            lpPercent = 36;  // 60% of remaining 60%
+            gpPercent = 24;  // 40% of remaining 60%
+            break;
+        case 'balanced':
+            sellPercent = 30;
+            lpPercent = 42;  // 60% of remaining 70%
+            gpPercent = 28;  // 40% of remaining 70%
+            break;
+        case 'aggressive':
+            sellPercent = 20;
+            lpPercent = 48;  // 60% of remaining 80%
+            gpPercent = 32;  // 40% of remaining 80%
+            break;
+        default:
+            console.error('Unknown preset:', preset);
+            return;
+    }
+
+    // Update sliders
+    document.getElementById('btcSellPercent').value = sellPercent;
+    document.getElementById('btcLpPercent').value = lpPercent;
+    document.getElementById('btcGpPercent').value = gpPercent;
+
+    // Update displays
+    updateDistributionDisplay();
+
+    // Recalculate
+    calculateInvestmentReturns();
+}
+
+/**
+ * Update distribution percentage displays and validate total
+ */
+function updateDistributionDisplay() {
+    const sellPercent = parseFloat(document.getElementById('btcSellPercent')?.value) || 0;
+    const lpPercent = parseFloat(document.getElementById('btcLpPercent')?.value) || 0;
+    const gpPercent = parseFloat(document.getElementById('btcGpPercent')?.value) || 0;
+
+    // Update display labels
+    document.getElementById('btcSellPercentDisplay').textContent = sellPercent + '%';
+    document.getElementById('btcLpPercentDisplay').textContent = lpPercent + '%';
+    document.getElementById('btcGpPercentDisplay').textContent = gpPercent + '%';
+
+    // Update slider backgrounds
+    const sellSlider = document.getElementById('btcSellPercent');
+    const lpSlider = document.getElementById('btcLpPercent');
+    const gpSlider = document.getElementById('btcGpPercent');
+
+    if (sellSlider) {
+        sellSlider.style.background = `linear-gradient(to right, #e74c3c 0%, #e74c3c ${sellPercent}%, #ddd ${sellPercent}%, #ddd 100%)`;
+    }
+    if (lpSlider) {
+        lpSlider.style.background = `linear-gradient(to right, #3498db 0%, #3498db ${lpPercent}%, #ddd ${lpPercent}%, #ddd 100%)`;
+    }
+    if (gpSlider) {
+        gpSlider.style.background = `linear-gradient(to right, #2d6a4f 0%, #2d6a4f ${gpPercent}%, #ddd ${gpPercent}%, #ddd 100%)`;
+    }
+
+    // Validate total = 100%
+    const total = sellPercent + lpPercent + gpPercent;
+    const totalEl = document.getElementById('distributionTotal');
+    const warningEl = document.getElementById('distributionWarning');
+
+    if (totalEl) {
+        totalEl.textContent = total.toFixed(0) + '%';
+        if (total === 100) {
+            totalEl.style.color = '#2d6a4f';
+            if (warningEl) warningEl.style.display = 'none';
+        } else {
+            totalEl.style.color = '#e74c3c';
+            if (warningEl) warningEl.style.display = 'block';
+        }
+    }
+}
+
+/**
+ * Calculate minimum BTC sell % needed to cover OPEX all 5 years
+ */
+function calculateMinimumOpexPercent() {
+    if (!projectData || !projectData.totalOpex) {
+        alert('Please complete Steps 1-4 first to calculate minimum OPEX coverage.');
+        return;
+    }
+
+    const baseOpex = projectData.totalOpex;
+    const inputs = getFinancialInputs();
+    const yearlyPrices = getYearlyPrices(inputs.btcPrice);
+
+    // Calculate BTC mined each year
+    const projections = calculateYearlyProjections(inputs, yearlyPrices);
+
+    if (!projections || !projections.yearlyData) {
+        console.error('Failed to calculate projections');
+        return;
+    }
+
+    // Find minimum % needed across all years
+    let maxPercentNeeded = 0;
+
+    for (let i = 0; i < 5; i++) {
+        const yearData = projections.yearlyData[i];
+        const inflatedOpex = calculateInflatedOpex(baseOpex, i + 1);
+        const btcPrice = yearlyPrices[i];
+        const btcMined = yearData.btcMined;
+
+        // What % of BTC mined do we need to sell to cover OPEX?
+        const btcValueIfSellAll = btcMined * btcPrice;
+        const percentNeeded = btcValueIfSellAll > 0 ? (inflatedOpex / btcValueIfSellAll) * 100 : 100;
+
+        maxPercentNeeded = Math.max(maxPercentNeeded, percentNeeded);
+    }
+
+    // Round up to nearest whole percent and add 2% buffer
+    const recommendedPercent = Math.min(100, Math.ceil(maxPercentNeeded) + 2);
+
+    // Update sell slider
+    document.getElementById('btcSellPercent').value = recommendedPercent;
+
+    // Get current GP/LP profit split
+    const splitValue = document.getElementById('gpLpSplit')?.value || '40-60';
+    const [gpProfitPercent, lpProfitPercent] = splitValue.split('-').map(v => parseInt(v));
+
+    // Distribute remaining % per profit split
+    const remaining = 100 - recommendedPercent;
+    const lpPercent = Math.round((remaining * lpProfitPercent) / 100);
+    const gpPercent = 100 - recommendedPercent - lpPercent;
+
+    document.getElementById('btcLpPercent').value = lpPercent;
+    document.getElementById('btcGpPercent').value = gpPercent;
+
+    updateDistributionDisplay();
+    calculateInvestmentReturns();
+
+    alert(`Minimum ${recommendedPercent}% of BTC must be sold to cover OPEX (including 2% buffer).\n\nRemaining ${100 - recommendedPercent}% split ${gpPercent}% GP / ${lpPercent}% LP per your profit sharing ratio.`);
 }
 
 console.log(' Pro Forma financial module loaded (FIXED VERSION)');

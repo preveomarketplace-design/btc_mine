@@ -134,6 +134,135 @@
 </div>
 
 <!-- ========================================= -->
+<!-- BTC DISTRIBUTION STRATEGY -->
+<!-- ========================================= -->
+<div style="background: #f0f8ff; border: 2px solid #3498db; border-radius: 8px; padding: 20px; margin: 20px 0;">
+    <h4 style="margin: 0 0 10px 0; font-size: 16px; color: #2c3e50; display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 20px;">⚙️</span> BTC DISTRIBUTION STRATEGY
+    </h4>
+    <p style="margin: 0 0 15px 0; font-size: 11px; color: #495057;">
+        Define how mined Bitcoin will be allocated annually. Operations need cash for OPEX while maximizing accumulation for exit.
+    </p>
+
+    <!-- PRESET TEMPLATES -->
+    <div style="margin-bottom: 15px;">
+        <label style="display: block; margin-bottom: 8px; font-size: 11px; font-weight: 600; color: #2c3e50;">
+            Quick Presets:
+        </label>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="applyDistributionPreset('conservative')"
+                    style="flex: 1; padding: 8px; border: 2px solid #6c757d; background: white; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600;">
+                🔵 Conservative
+                <div style="font-size: 9px; font-weight: normal; color: #6c757d; margin-top: 2px;">40% Sell | 36% LP | 24% GP</div>
+            </button>
+            <button onclick="applyDistributionPreset('balanced')"
+                    style="flex: 1; padding: 8px; border: 2px solid #3498db; background: #e3f2fd; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600;">
+                🟡 Balanced (Default)
+                <div style="font-size: 9px; font-weight: normal; color: #6c757d; margin-top: 2px;">30% Sell | 42% LP | 28% GP</div>
+            </button>
+            <button onclick="applyDistributionPreset('aggressive')"
+                    style="flex: 1; padding: 8px; border: 2px solid #6c757d; background: white; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600;">
+                🟢 Aggressive
+                <div style="font-size: 9px; font-weight: normal; color: #6c757d; margin-top: 2px;">20% Sell | 48% LP | 32% GP</div>
+            </button>
+        </div>
+    </div>
+
+    <!-- DISTRIBUTION SLIDERS -->
+    <div style="background: white; border: 1px solid #dee2e6; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
+        <div style="margin-bottom: 12px;">
+            <label for="btcSellPercent" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                <span style="font-size: 11px; font-weight: 600; color: #e74c3c;">🔴 Sell for OPEX:</span>
+                <span id="btcSellPercentDisplay" style="font-size: 14px; font-weight: 700; color: #e74c3c;">30%</span>
+            </label>
+            <input type="range" id="btcSellPercent" min="0" max="100" value="30" step="1"
+                   oninput="updateDistributionDisplay(); calculateInvestmentReturns();"
+                   style="width: 100%; height: 8px; border-radius: 5px; background: linear-gradient(to right, #e74c3c 0%, #e74c3c 30%, #ddd 30%, #ddd 100%);">
+        </div>
+
+        <div style="margin-bottom: 12px;">
+            <label for="btcLpPercent" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                <span style="font-size: 11px; font-weight: 600; color: #3498db;">🔵 LP Accumulation:</span>
+                <span id="btcLpPercentDisplay" style="font-size: 14px; font-weight: 700; color: #3498db;">42%</span>
+            </label>
+            <input type="range" id="btcLpPercent" min="0" max="100" value="42" step="1"
+                   oninput="updateDistributionDisplay(); calculateInvestmentReturns();"
+                   style="width: 100%; height: 8px; border-radius: 5px; background: linear-gradient(to right, #3498db 0%, #3498db 42%, #ddd 42%, #ddd 100%);">
+        </div>
+
+        <div style="margin-bottom: 12px;">
+            <label for="btcGpPercent" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                <span style="font-size: 11px; font-weight: 600; color: #2d6a4f;">🟢 GP Accumulation:</span>
+                <span id="btcGpPercentDisplay" style="font-size: 14px; font-weight: 700; color: #2d6a4f;">28%</span>
+            </label>
+            <input type="range" id="btcGpPercent" min="0" max="100" value="28" step="1"
+                   oninput="updateDistributionDisplay(); calculateInvestmentReturns();"
+                   style="width: 100%; height: 8px; border-radius: 5px; background: linear-gradient(to right, #2d6a4f 0%, #2d6a4f 28%, #ddd 28%, #ddd 100%);">
+        </div>
+
+        <!-- Total Validation -->
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 4px; border: 1px solid #dee2e6;">
+            <span style="font-size: 12px; font-weight: 600; color: #495057;">Total Allocation:</span>
+            <span id="distributionTotal" style="font-size: 16px; font-weight: 700; color: #2d6a4f;">100%</span>
+        </div>
+        <div id="distributionWarning" style="display: none; margin-top: 8px; padding: 8px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; font-size: 10px; color: #856404;">
+            ⚠️ Total must equal 100%. Please adjust percentages.
+        </div>
+    </div>
+
+    <!-- SMART TOOLS -->
+    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+        <button onclick="calculateMinimumOpexPercent()"
+                style="flex: 1; padding: 10px; border: 1px solid #3498db; background: white; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600; color: #3498db;">
+            🔍 Calculate Minimum OPEX %
+        </button>
+        <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: white; border: 1px solid #dee2e6; border-radius: 4px; cursor: pointer;">
+            <input type="checkbox" id="showPresentValue" onchange="calculateInvestmentReturns();">
+            <span style="font-size: 11px; font-weight: 600;">Show Present Value (PV)</span>
+        </label>
+    </div>
+
+    <!-- 5-YEAR IMPACT SUMMARY -->
+    <div id="distributionSummary" style="background: white; border: 2px solid #3498db; border-radius: 6px; padding: 15px;">
+        <h5 style="margin: 0 0 10px 0; font-size: 12px; font-weight: 700; color: #2c3e50;">📊 5-Year Impact Summary</h5>
+        <div style="font-size: 10px; color: #6c757d; margin-bottom: 10px;">
+            Total BTC Mined: <strong id="summaryTotalBtc">0 BTC</strong> over 5 years
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+            <!-- Sold for OPEX -->
+            <div style="padding: 10px; background: #fff5f5; border: 1px solid #e74c3c; border-radius: 4px;">
+                <div style="font-size: 9px; color: #e74c3c; font-weight: 600; margin-bottom: 5px;">🔴 SOLD FOR OPEX</div>
+                <div style="font-size: 11px; font-weight: 700; color: #2c3e50;" id="summarySoldBtc">0 BTC</div>
+                <div style="font-size: 10px; color: #495057; margin-top: 3px;" id="summarySoldValue">$0M</div>
+                <div style="font-size: 9px; color: #6c757d; margin-top: 3px;" id="summarySoldPv"></div>
+            </div>
+
+            <!-- LP Accumulated -->
+            <div style="padding: 10px; background: #f0f8ff; border: 1px solid #3498db; border-radius: 4px;">
+                <div style="font-size: 9px; color: #3498db; font-weight: 600; margin-bottom: 5px;">🔵 LP ACCUMULATED</div>
+                <div style="font-size: 11px; font-weight: 700; color: #2c3e50;" id="summaryLpBtc">0 BTC</div>
+                <div style="font-size: 10px; color: #495057; margin-top: 3px;" id="summaryLpValue">$0M</div>
+                <div style="font-size: 9px; color: #6c757d; margin-top: 3px;" id="summaryLpRoi">ROI: 0%</div>
+            </div>
+
+            <!-- GP Accumulated -->
+            <div style="padding: 10px; background: #f0fff4; border: 1px solid #2d6a4f; border-radius: 4px;">
+                <div style="font-size: 9px; color: #2d6a4f; font-weight: 600; margin-bottom: 5px;">🟢 GP ACCUMULATED</div>
+                <div style="font-size: 11px; font-weight: 700; color: #2c3e50;" id="summaryGpBtc">0 BTC</div>
+                <div style="font-size: 10px; color: #495057; margin-top: 3px;" id="summaryGpValue">$0M</div>
+                <div style="font-size: 9px; color: #6c757d; margin-top: 3px;" id="summaryGpRoi">ROI: 0%</div>
+            </div>
+        </div>
+
+        <!-- OPEX Coverage Status -->
+        <div id="opexCoverageStatus" style="margin-top: 10px; padding: 10px; border-radius: 4px; font-size: 10px;">
+            <!-- Populated by JavaScript -->
+        </div>
+    </div>
+</div>
+
+<!-- ========================================= -->
 <!-- BTC ACCUMULATION & EXIT SCENARIOS -->
 <!-- ========================================= -->
 <div class="section-title">BTC ACCUMULATION & EXIT SCENARIOS</div>
@@ -158,13 +287,53 @@
             <td class="number" id="btc_y4">0</td>
             <td class="number" id="btc_y5">0</td>
         </tr>
+        <tr style="background: #fff5f5;">
+            <td style="padding-left: 20px; font-size: 10px;">├─ 🔴 Sold for OPEX</td>
+            <td class="number" id="btc_sold_y1" style="font-size: 10px; color: #e74c3c;">0</td>
+            <td class="number" id="btc_sold_y2" style="font-size: 10px; color: #e74c3c;">0</td>
+            <td class="number" id="btc_sold_y3" style="font-size: 10px; color: #e74c3c;">0</td>
+            <td class="number" id="btc_sold_y4" style="font-size: 10px; color: #e74c3c;">0</td>
+            <td class="number" id="btc_sold_y5" style="font-size: 10px; color: #e74c3c;">0</td>
+        </tr>
+        <tr style="background: #f0fff4;">
+            <td style="padding-left: 20px; font-size: 10px;">├─ 🟢 GP Accumulated</td>
+            <td class="number" id="btc_gp_y1" style="font-size: 10px; color: #2d6a4f;">0</td>
+            <td class="number" id="btc_gp_y2" style="font-size: 10px; color: #2d6a4f;">0</td>
+            <td class="number" id="btc_gp_y3" style="font-size: 10px; color: #2d6a4f;">0</td>
+            <td class="number" id="btc_gp_y4" style="font-size: 10px; color: #2d6a4f;">0</td>
+            <td class="number" id="btc_gp_y5" style="font-size: 10px; color: #2d6a4f;">0</td>
+        </tr>
+        <tr style="background: #f0f8ff;">
+            <td style="padding-left: 20px; font-size: 10px;">└─ 🔵 LP Accumulated</td>
+            <td class="number" id="btc_lp_y1" style="font-size: 10px; color: #3498db;">0</td>
+            <td class="number" id="btc_lp_y2" style="font-size: 10px; color: #3498db;">0</td>
+            <td class="number" id="btc_lp_y3" style="font-size: 10px; color: #3498db;">0</td>
+            <td class="number" id="btc_lp_y4" style="font-size: 10px; color: #3498db;">0</td>
+            <td class="number" id="btc_lp_y5" style="font-size: 10px; color: #3498db;">0</td>
+        </tr>
         <tr style="background: #d4edda; font-weight: 600;">
-            <td><strong>Cumulative BTC Holdings</strong></td>
-            <td class="number" id="cum_btc_y1">0</td>
-            <td class="number" id="cum_btc_y2">0</td>
-            <td class="number" id="cum_btc_y3">0</td>
-            <td class="number" id="cum_btc_y4">0</td>
-            <td class="number" id="cum_btc_y5">0</td>
+            <td><strong>Cumulative GP Holdings</strong></td>
+            <td class="number" id="cum_gp_y1" style="color: #2d6a4f;">0 BTC</td>
+            <td class="number" id="cum_gp_y2" style="color: #2d6a4f;">0 BTC</td>
+            <td class="number" id="cum_gp_y3" style="color: #2d6a4f;">0 BTC</td>
+            <td class="number" id="cum_gp_y4" style="color: #2d6a4f;">0 BTC</td>
+            <td class="number" id="cum_gp_y5" style="color: #2d6a4f;">0 BTC</td>
+        </tr>
+        <tr style="background: #d4edda; font-weight: 600;">
+            <td><strong>Cumulative LP Holdings</strong></td>
+            <td class="number" id="cum_lp_y1" style="color: #3498db;">0 BTC</td>
+            <td class="number" id="cum_lp_y2" style="color: #3498db;">0 BTC</td>
+            <td class="number" id="cum_lp_y3" style="color: #3498db;">0 BTC</td>
+            <td class="number" id="cum_lp_y4" style="color: #3498db;">0 BTC</td>
+            <td class="number" id="cum_lp_y5" style="color: #3498db;">0 BTC</td>
+        </tr>
+        <tr style="background: #e8f4fd; font-weight: 600;">
+            <td><strong>Total BTC Sold (Cumulative)</strong></td>
+            <td class="number" id="cum_sold_y1" style="color: #e74c3c;">0 BTC</td>
+            <td class="number" id="cum_sold_y2" style="color: #e74c3c;">0 BTC</td>
+            <td class="number" id="cum_sold_y3" style="color: #e74c3c;">0 BTC</td>
+            <td class="number" id="cum_sold_y4" style="color: #e74c3c;">0 BTC</td>
+            <td class="number" id="cum_sold_y5" style="color: #e74c3c;">0 BTC</td>
         </tr>
         <tr>
             <td style="padding-left: 20px;">BTC Price (End of Year)</td>
@@ -175,8 +344,37 @@
             <td class="number" id="price_y5">$0</td>
         </tr>
         <tr style="background: #f8f9fa;">
+            <td colspan="6" style="text-align: center; font-weight: 600; padding: 8px; font-size: 11px; color: #2c3e50;">
+                OPEX COVERAGE CHECK
+            </td>
+        </tr>
+        <tr>
+            <td style="font-size: 10px;">OPEX Required (with inflation)</td>
+            <td class="number" id="opex_req_y1" style="font-size: 10px;">$0</td>
+            <td class="number" id="opex_req_y2" style="font-size: 10px;">$0</td>
+            <td class="number" id="opex_req_y3" style="font-size: 10px;">$0</td>
+            <td class="number" id="opex_req_y4" style="font-size: 10px;">$0</td>
+            <td class="number" id="opex_req_y5" style="font-size: 10px;">$0</td>
+        </tr>
+        <tr>
+            <td style="font-size: 10px;">BTC Sale Proceeds</td>
+            <td class="number" id="opex_proceeds_y1" style="font-size: 10px;">$0</td>
+            <td class="number" id="opex_proceeds_y2" style="font-size: 10px;">$0</td>
+            <td class="number" id="opex_proceeds_y3" style="font-size: 10px;">$0</td>
+            <td class="number" id="opex_proceeds_y4" style="font-size: 10px;">$0</td>
+            <td class="number" id="opex_proceeds_y5" style="font-size: 10px;">$0</td>
+        </tr>
+        <tr style="background: #e8f5e9;">
+            <td style="font-size: 10px; font-weight: 600;">Coverage Status</td>
+            <td class="number" id="opex_status_y1" style="font-size: 10px; font-weight: 600;">-</td>
+            <td class="number" id="opex_status_y2" style="font-size: 10px; font-weight: 600;">-</td>
+            <td class="number" id="opex_status_y3" style="font-size: 10px; font-weight: 600;">-</td>
+            <td class="number" id="opex_status_y4" style="font-size: 10px; font-weight: 600;">-</td>
+            <td class="number" id="opex_status_y5" style="font-size: 10px; font-weight: 600;">-</td>
+        </tr>
+        <tr style="background: #f8f9fa;">
             <td colspan="6" style="text-align: center; font-weight: 600; padding: 12px; font-size: 12px; color: #2c3e50;">
-                EXIT SCENARIO ANALYSIS (If You Sell All BTC & Exit At End of Each Year)
+                EXIT SCENARIO ANALYSIS (If You Sell All Accumulated BTC & Exit At End of Each Year)
             </td>
         </tr>
         <tr style="background: #d4edda;">

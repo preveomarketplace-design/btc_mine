@@ -12,8 +12,8 @@ const CONSTANTS = {
     HALVING_YEAR: 2028,
     
     // Financial
-    DEFAULT_OPEX_INFLATION: 0.03,
-    EQUIPMENT_RESIDUAL_PERCENT: 0.20,
+    DEFAULT_OPEX_INFLATION: 0.04,  // 4% annual inflation
+    EQUIPMENT_RESIDUAL_PERCENT: 0.25,  // 25% residual at Year 5
     DEPRECIATION_YEARS: 5,
     
     // Calculation Parameters
@@ -193,6 +193,46 @@ function safeLocalStorageLoad(key, defaultValue = null) {
 }
 
 // ============================================================================
+// PRESENT VALUE CALCULATIONS
+// ============================================================================
+
+/**
+ * Calculate Present Value of a future amount
+ * @param {number} futureValue - The nominal future value
+ * @param {number} year - Year in the future (1-5)
+ * @param {number} discountRate - Annual discount rate (e.g., 0.12 for 12%)
+ * @returns {number} Present value
+ */
+function calculatePresentValue(futureValue, year, discountRate) {
+    if (year === 0) return futureValue;
+    return futureValue / Math.pow(1 + discountRate, year);
+}
+
+/**
+ * Calculate inflated OPEX for a given year
+ * @param {number} baseOpex - Base year OPEX amount
+ * @param {number} year - Year (1-5, where 1 = first year)
+ * @param {number} inflationRate - Annual inflation rate (default 4%)
+ * @returns {number} Inflated OPEX
+ */
+function calculateInflatedOpex(baseOpex, year, inflationRate = CONSTANTS.DEFAULT_OPEX_INFLATION) {
+    // Year 1 uses base OPEX, Year 2 = base * (1 + rate), etc.
+    return baseOpex * Math.pow(1 + inflationRate, year - 1);
+}
+
+/**
+ * Get BTC distribution percentages from UI
+ * @returns {object} { sellPercent, lpPercent, gpPercent }
+ */
+function getBtcDistribution() {
+    const sellPercent = parseFloat(document.getElementById('btcSellPercent')?.value) || 30;
+    const lpPercent = parseFloat(document.getElementById('btcLpPercent')?.value) || 42;
+    const gpPercent = parseFloat(document.getElementById('btcGpPercent')?.value) || 28;
+
+    return { sellPercent, lpPercent, gpPercent };
+}
+
+// ============================================================================
 // EXPORTS
 // ============================================================================
 
@@ -211,6 +251,9 @@ if (typeof module !== 'undefined' && module.exports) {
         getBlockReward,
         calculateNetworkShare,
         safeLocalStorageSave,
-        safeLocalStorageLoad
+        safeLocalStorageLoad,
+        calculatePresentValue,
+        calculateInflatedOpex,
+        getBtcDistribution
     };
 }
