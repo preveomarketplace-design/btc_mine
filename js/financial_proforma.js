@@ -940,7 +940,7 @@ function updateSensitivityAnalysis(projections, inputs) {
     const hashRateMultipliers = [1.0, 1.2, 1.5, 0.8, 0.5];
     const hashRateLabels = ['100', '120', '150', '80', '50'];
 
-    const baseHashrate = projectData.totalHashrate || 0;
+    const baseHashrate = projectData.totalHashratePH || 0;
     const capex = projectData.totalCapex;
     const opex = projectData.totalOpex;
 
