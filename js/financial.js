@@ -83,7 +83,9 @@ function calculateInvestmentReturns() {
         updateGpReturns(returns.gp, structure);
         updateLpCashFlowTable(returns.lpYearly, structure);
         updateWaterfallVisualization(returns, structure);
-        updateTraditionalMetrics(projections, inputs);        
+        updateTraditionalMetrics(projections, inputs);
+        updateSensitivityTable(inputs);
+
         // Update Pro Forma Report
         if (typeof updateProFormaReport === 'function') {
             console.log('Calling updateProFormaReport...');
@@ -91,7 +93,7 @@ function calculateInvestmentReturns() {
         } else {
             console.error('updateProFormaReport function not found!');
         }
-        
+
         announceCalculationComplete(returns.lp.roi || 0);
     } catch (error) {
         console.error('Financial calculation error:', error);
@@ -345,13 +347,13 @@ function updateLpReturns(lp, structure) {
         console.warn('LP returns data is undefined');
         return;
     }
-    
-    safeUpdateElement('lpInvestmentAmount', '$' + (lp.investment || 0).toLocaleString());
-    safeUpdateElement('lpBtcEarned', (lp.btcEarned || 0).toFixed(4) + ' BTC');
-    safeUpdateElement('lpTotalReturn', '$' + (lp.totalReturn || 0).toLocaleString(undefined, {maximumFractionDigits: 0}));
-    
+
+    // Update LP Returns metrics - using correct element IDs from Step5.html
+    safeUpdateElement('lpInvestment', '$' + (lp.investment || 0).toLocaleString());
+    safeUpdateElement('lpReturn', '$' + (lp.netReturn || 0).toLocaleString(undefined, {maximumFractionDigits: 0}));
+
     const roiColor = (lp.roi || 0) >= 0 ? '#2d6a4f' : '#e74c3c';
-    const roiElement = document.getElementById('lpRoi');
+    const roiElement = document.getElementById('lpROI');
     if (roiElement) {
         roiElement.textContent = (lp.roi || 0).toFixed(1) + '%';
         roiElement.style.color = roiColor;
@@ -363,17 +365,11 @@ function updateGpReturns(gp, structure) {
         console.warn('GP returns data is undefined');
         return;
     }
-    
-    safeUpdateElement('gpInvestmentAmount', '$' + (gp.investment || 0).toLocaleString());
-    safeUpdateElement('gpBtcEarned', (gp.btcEarned || 0).toFixed(4) + ' BTC');
-    safeUpdateElement('gpTotalReturn', '$' + (gp.totalReturn || 0).toLocaleString(undefined, {maximumFractionDigits: 0}));
-    
-    const roiColor = (gp.roi || 0) >= 0 ? '#2d6a4f' : '#e74c3c';
-    const roiElement = document.getElementById('gpRoi');
-    if (roiElement) {
-        roiElement.textContent = (gp.roi || 0).toFixed(1) + '%';
-        roiElement.style.color = roiColor;
-    }
+
+    // Update GP Returns metrics - using correct element IDs from Step5.html
+    safeUpdateElement('gpShare', (structure.gpPercent || 0) + '%');
+    safeUpdateElement('gpProfit', '$' + (gp.netReturn || 0).toLocaleString(undefined, {maximumFractionDigits: 0}));
+    safeUpdateElement('gpLpRatio', (structure.gpPercent || 0) + ':' + (structure.lpPercent || 0));
 }
 
 function updateLpCashFlowTable(lpYearly, structure) {
@@ -433,21 +429,120 @@ function updateWaterfallVisualization(returns, structure) {
     safeUpdateElement('waterfallLpBtc', ((returns.lp && returns.lp.btcEarned) || 0).toFixed(4));
 }
 
+function updateSensitivityTable(inputs) {
+    console.log('Updating sensitivity table...');
+
+    const btcPrices = [150000, 120000, 100000, 80000, 60000];
+    const hashRateMultipliers = [1.0, 1.2, 1.5, 0.8, 0.5];
+    const hashRateLabels = ['100', '120', '150', '80', '50'];
+
+    btcPrices.forEach(price => {
+        hashRateMultipliers.forEach((multiplier, idx) => {
+            try {
+                // Create yearly prices array (all same price for simplicity)
+                const yearlyPrices = Array(5).fill(price);
+
+                // Calculate hashrate with multiplier
+                const adjustedHashratePH = projectData.totalHashratePH * multiplier;
+
+                // Create temporary inputs with adjusted values
+                const tempInputs = {
+                    ...inputs,
+                    btcPrice: price
+                };
+
+                // Calculate projections with adjusted hashrate
+                const projections = calculateYearlyProjectionsForSensitivity(tempInputs, yearlyPrices, adjustedHashratePH);
+
+                // Calculate IRR
+                const equipmentResidual = projectData.totalCapex * CONSTANTS.EQUIPMENT_RESIDUAL_PERCENT;
+                const irr = calculateIRRSimplified(
+                    projectData.totalCapex,
+                    projections.totalRevenue || 0,
+                    projections.totalOpex5Year || 0,
+                    equipmentResidual,
+                    projections.annualDepreciation || 0
+                );
+
+                // Update cell
+                const cellId = `sens_${price / 1000}_${hashRateLabels[idx]}`;
+                const cellElement = document.getElementById(cellId);
+                if (cellElement) {
+                    cellElement.textContent = irr.toFixed(1) + '%';
+                    // Color code: green for positive, red for negative
+                    cellElement.style.color = irr >= 0 ? '#2d6a4f' : '#e74c3c';
+                    cellElement.style.fontWeight = '600';
+                }
+            } catch (error) {
+                console.error(`Error calculating sensitivity for price ${price}, multiplier ${multiplier}:`, error);
+            }
+        });
+    });
+
+    console.log('✅ Sensitivity table updated');
+}
+
+function calculateYearlyProjectionsForSensitivity(inputs, yearlyPrices, hashratePH) {
+    const networkHashrate = inputs.networkHashrateEH * 1000;
+    const startYear = projectData.startYear || 2026;
+    const annualDepreciation = projectData.totalCapex / CONSTANTS.DEPRECIATION_YEARS;
+
+    let totalRevenue = 0;
+    let totalOpex5Year = 0;
+    let totalBtcMined = 0;
+
+    const yearlyData = [];
+
+    for(let year = 1; year <= 5; year++) {
+        const calendarYear = startYear + year - 1;
+        const reward = getBlockReward(calendarYear);
+        const difficultyFactor = Math.pow(1 + inputs.difficultyGrowth, year - 1);
+        const effectiveHashrate = hashratePH / difficultyFactor;
+        const networkShare = effectiveHashrate / networkHashrate;
+
+        const btcMined = networkShare * CONSTANTS.BLOCKS_PER_YEAR * reward * inputs.uptime;
+        totalBtcMined += btcMined;
+
+        const yearPrice = yearlyPrices[year - 1];
+        const revenue = btcMined * yearPrice;
+        totalRevenue += revenue;
+
+        const opex = projectData.totalOpex * Math.pow(1 + CONSTANTS.DEFAULT_OPEX_INFLATION, year - 1);
+        totalOpex5Year += opex;
+
+        yearlyData.push({
+            year,
+            calendarYear,
+            btcMined,
+            revenue,
+            opex
+        });
+    }
+
+    return {
+        yearlyData,
+        totalRevenue,
+        totalOpex5Year,
+        totalBtcMined,
+        annualDepreciation
+    };
+}
+
 function updateTraditionalMetrics(projections, inputs) {
     if (!projections) {
         console.warn('Projections data is undefined');
         return;
     }
-    
+
     const equipmentResidual = projectData.totalCapex * CONSTANTS.EQUIPMENT_RESIDUAL_PERCENT;
     const irr = calculateIRRSimplified(
-        projectData.totalCapex, 
-        projections.totalRevenue || 0, 
-        projections.totalOpex5Year || 0, 
-        equipmentResidual, 
+        projectData.totalCapex,
+        projections.totalRevenue || 0,
+        projections.totalOpex5Year || 0,
+        equipmentResidual,
         projections.annualDepreciation || 0
     );
-    
+
     safeUpdateElement('paybackPeriod', (projections.paybackYear || 0) > 0 ? projections.paybackYear.toFixed(1) + ' years' : '> 5 years');
     safeUpdateElement('projectIrr', irr.toFixed(1) + '%');
     safeUpdateElement('projectNpv', '$' + (projections.npv || 0).toLocaleString(undefined, {maximumFractionDigits: 0}));
