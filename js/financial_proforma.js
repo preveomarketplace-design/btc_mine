@@ -132,21 +132,20 @@ function updateProFormaCashFlow(projections) {
     for (let i = 0; i < 5; i++) {
         const yearData = data[i] || {};
         const ebitda = yearData.revenue - yearData.opex;
-        const capex = i === 0 ? projectData.totalCapex : 0;
         const residual = i === 4 ? equipmentResidual : 0;
-        const fcf = ebitda - capex + residual;
-        
+        const fcf = ebitda + residual; // CAPEX happened in Year 0, not in Years 1-5
+
         cumulativeCF += fcf;
         totalFCF += fcf;
-        
+
         const ebitdaEl = document.getElementById(`cf_ebitda_y${i+1}`);
         const capexEl = document.getElementById(`cf_capex_y${i+1}`);
         const residualEl = document.getElementById(`cf_residual_y${i+1}`);
         const fcfEl = document.getElementById(`fcf_y${i+1}`);
         const cumEl = document.getElementById(`cum_cf_y${i+1}`);
-        
+
         if (ebitdaEl) ebitdaEl.textContent = '$' + formatNumber(ebitda);
-        if (capexEl) capexEl.textContent = i === 0 ? '($' + formatNumber(capex) + ')' : '$0';
+        if (capexEl) capexEl.textContent = '$0'; // CAPEX is Year 0 (initial), not in Years 1-5
         if (residualEl) residualEl.textContent = i === 4 ? '$' + formatNumber(residual) : '$0';
         if (fcfEl) fcfEl.textContent = '$' + formatNumber(fcf);
         if (cumEl) cumEl.textContent = '$' + formatNumber(cumulativeCF);
@@ -177,16 +176,15 @@ function updateKeyMetrics(projections, inputs) {
     if (!projections) return;
     
     // IRR
-    const cashFlows = [-projectData.totalCapex];
-    projections.yearlyData.forEach((d, i) => {
-        const ebitda = d.revenue - d.opex;
-        const residual = i === 4 ? projectData.totalCapex * 0.25 : 0;
-        cashFlows.push(ebitda + residual);
-    });
-    
-    const irr = calculateIRRSimplified ? calculateIRRSimplified(cashFlows) : 0;
+    const equipmentResidual = projectData.totalCapex * CONSTANTS.EQUIPMENT_RESIDUAL_PERCENT;
+    const annualDepreciation = projectData.totalCapex / CONSTANTS.DEPRECIATION_YEARS;
+    const totalRevenue = projections.totalRevenue || 0;
+    const totalOpex5Year = projections.yearlyData.reduce((sum, d) => sum + d.opex, 0);
+
+    const irr = calculateIRRSimplified ?
+        calculateIRRSimplified(projectData.totalCapex, totalRevenue, totalOpex5Year, equipmentResidual, annualDepreciation) : 0;
     const irrEl = document.getElementById('metric_irr');
-    if (irrEl) irrEl.textContent = (irr * 100).toFixed(1) + '%';
+    if (irrEl) irrEl.textContent = irr.toFixed(1) + '%';
     
     // NPV
     const npv = projections.npv || 0;
@@ -224,15 +222,16 @@ function createRevenueEbitdaChart(projections) {
         return;
     }
     
-    // Destroy existing chart
-    if (window.revenueEbitdaChart && typeof window.revenueEbitdaChart.destroy === 'function') {
-        window.revenueEbitdaChart.destroy();
+    // Destroy existing chart using Chart.js API
+    const existingChart = Chart.getChart(ctx);
+    if (existingChart) {
+        existingChart.destroy();
     }
-    
+
     const years = projections.yearlyData.map(d => `Year ${d.year}`);
     const revenues = projections.yearlyData.map(d => d.revenue / 1000);
     const ebitdas = projections.yearlyData.map(d => (d.revenue - d.opex) / 1000);
-    
+
     window.revenueEbitdaChart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -315,14 +314,15 @@ function createOpexBreakdownChart(projections) {
         return;
     }
     
-    if (window.opexBreakdownChart && typeof window.opexBreakdownChart.destroy === 'function') {
-        window.opexBreakdownChart.destroy();
+    const existingChart = Chart.getChart(ctx);
+    if (existingChart) {
+        existingChart.destroy();
     }
-    
+
     const years = projections.yearlyData.map(d => `Year ${d.year}`);
     const opexEnergy = projections.yearlyData.map(() => (projectData.totalOpex * 0.6) / 1000);
     const opexMaint = projections.yearlyData.map(() => (projectData.totalOpex * 0.4) / 1000);
-    
+
     window.opexBreakdownChart = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -396,10 +396,11 @@ function createCumulativeCashFlowChart(projections) {
         return;
     }
     
-    if (window.cumulativeCashFlowChart && typeof window.cumulativeCashFlowChart.destroy === 'function') {
-        window.cumulativeCashFlowChart.destroy();
+    const existingChart = Chart.getChart(ctx);
+    if (existingChart) {
+        existingChart.destroy();
     }
-    
+
     const years = ['Start'].concat(projections.yearlyData.map(d => `Year ${d.year}`));
     let cumulative = -projectData.totalCapex;
     const cumulativeData = [-projectData.totalCapex / 1000];
@@ -500,16 +501,17 @@ function createEbitdaMarginChart(projections) {
         return;
     }
     
-    if (window.ebitdaMarginChart && typeof window.ebitdaMarginChart.destroy === 'function') {
-        window.ebitdaMarginChart.destroy();
+    const existingChart = Chart.getChart(ctx);
+    if (existingChart) {
+        existingChart.destroy();
     }
-    
+
     const years = projections.yearlyData.map(d => `Year ${d.year}`);
     const margins = projections.yearlyData.map(d => {
         const ebitda = d.revenue - d.opex;
         return d.revenue > 0 ? ((ebitda / d.revenue) * 100) : 0;
     });
-    
+
     window.ebitdaMarginChart = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -574,6 +576,117 @@ function formatNumber(num) {
 }
 
 /**
+ * Create Cash Flow Waterfall Chart
+ */
+function createWaterfallChart(projections) {
+    console.log('Creating Waterfall Chart...');
+
+    const ctx = document.getElementById('waterfallChart');
+    if (!ctx) {
+        console.error('❌ Canvas waterfallChart not found!');
+        return;
+    }
+
+    const existingChart = Chart.getChart(ctx);
+    if (existingChart) {
+        existingChart.destroy();
+    }
+
+    // Calculate waterfall data
+    const initialCapex = -projectData.totalCapex;
+    const yearlyEbitdas = projections.yearlyData.map(d => d.revenue - d.opex);
+    const residual = projectData.totalCapex * 0.25;
+
+    // Build cumulative waterfall
+    const labels = ['Initial CAPEX'];
+    const data = [initialCapex / 1000];
+    let cumulative = initialCapex;
+
+    yearlyEbitdas.forEach((ebitda, i) => {
+        cumulative += ebitda;
+        labels.push(`Year ${i + 1} EBITDA`);
+        data.push(ebitda / 1000);
+    });
+
+    cumulative += residual;
+    labels.push('Equipment Residual');
+    data.push(residual / 1000);
+
+    labels.push('Final Value');
+    data.push(cumulative / 1000);
+
+    window.waterfallChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Cash Flow ($1,000s)',
+                data: data,
+                backgroundColor: data.map(v => v >= 0 ? 'rgba(45, 106, 79, 0.7)' : 'rgba(231, 76, 60, 0.7)'),
+                borderColor: data.map(v => v >= 0 ? 'rgba(45, 106, 79, 1)' : 'rgba(231, 76, 60, 1)'),
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return '$' + (context.parsed.y * 1000).toLocaleString();
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: {
+                        font: { size: 10 },
+                        color: '#6c757d',
+                        maxRotation: 45,
+                        minRotation: 45
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Cash Flow ($1,000s)',
+                        font: { size: 11, weight: '600' },
+                        color: '#6c757d'
+                    },
+                    grid: {
+                        color: function(context) {
+                            if (context.tick.value === 0) {
+                                return 'rgba(0, 0, 0, 0.3)';
+                            }
+                            return 'rgba(0, 0, 0, 0.05)';
+                        },
+                        lineWidth: function(context) {
+                            if (context.tick.value === 0) {
+                                return 2;
+                            }
+                            return 1;
+                        }
+                    },
+                    ticks: {
+                        font: { size: 10 },
+                        color: '#6c757d',
+                        callback: function(value) {
+                            return '$' + value + 'k';
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    console.log('✅ Waterfall Chart created');
+}
+
+/**
  * Master function to update all pro forma sections
  */
 function updateProFormaReport(projections, inputs) {
@@ -600,8 +713,9 @@ function updateProFormaReport(projections, inputs) {
         createOpexBreakdownChart(projections);
         createCumulativeCashFlowChart(projections);
         createEbitdaMarginChart(projections);
+        createWaterfallChart(projections);
     }, 100);
-    
+
     console.log('✅ Pro Forma Report update complete');
 }
 

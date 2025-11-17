@@ -334,12 +334,52 @@ function updateInvestmentStructure(structure) {
         console.warn('Investment structure is undefined');
         return;
     }
-    
-    safeUpdateElement('structureTotalCapex', '$' + (structure.totalCapex || 0).toLocaleString());
-    safeUpdateElement('structureTotalLpPool', '$' + (structure.totalLpCapital || 0).toLocaleString());
-    safeUpdateElement('structureInvestorLpShare', (structure.investorLpSharePercent || 0).toFixed(1) + '%');
-    safeUpdateElement('structureInvestorProfitShare', (structure.investorProfitSharePercent || 0).toFixed(1) + '%');
-    safeUpdateElement('structureProfitSplit', (structure.gpPercent || 0) + '/' + (structure.lpPercent || 0));
+
+    const tbody = document.getElementById('investmentStructureTable');
+    if (!tbody) {
+        console.warn('Investment structure table not found');
+        return;
+    }
+
+    tbody.innerHTML = '';
+
+    // GP Row
+    const gpRow = tbody.insertRow();
+    gpRow.innerHTML = `
+        <td><strong>General Partner (GP)</strong></td>
+        <td class="number">$${(structure.gpCapital || 0).toLocaleString()}</td>
+        <td class="number">${((structure.gpCapital / structure.totalCapex) * 100).toFixed(1)}%</td>
+        <td class="number">${structure.gpPercent}%</td>
+    `;
+
+    // Total LP Pool Row
+    const lpPoolRow = tbody.insertRow();
+    lpPoolRow.innerHTML = `
+        <td><strong>Limited Partners (LP Pool)</strong></td>
+        <td class="number">$${(structure.totalLpCapital || 0).toLocaleString()}</td>
+        <td class="number">${((structure.totalLpCapital / structure.totalCapex) * 100).toFixed(1)}%</td>
+        <td class="number">${structure.lpPercent}%</td>
+    `;
+
+    // Your LP Share Row (highlighted)
+    const yourRow = tbody.insertRow();
+    yourRow.style.background = '#e8f4fd';
+    yourRow.innerHTML = `
+        <td><strong>Your LP Investment</strong></td>
+        <td class="number" style="font-weight: 600;">$${(structure.investorCapital || 0).toLocaleString()}</td>
+        <td class="number" style="font-weight: 600;">${(structure.investorLpSharePercent || 0).toFixed(1)}% of LP pool</td>
+        <td class="number" style="font-weight: 600;">${(structure.investorProfitSharePercent || 0).toFixed(1)}%</td>
+    `;
+
+    // Total Row
+    const totalRow = tbody.insertRow();
+    totalRow.classList.add('total-row');
+    totalRow.innerHTML = `
+        <td><strong>TOTAL</strong></td>
+        <td class="number"><strong>$${(structure.totalCapex || 0).toLocaleString()}</strong></td>
+        <td class="number"><strong>100%</strong></td>
+        <td class="number"><strong>100%</strong></td>
+    `;
 }
 
 function updateLpReturns(lp, structure) {
