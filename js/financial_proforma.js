@@ -177,16 +177,16 @@ function updateKeyMetrics(projections, inputs) {
     if (!projections) return;
     
     // IRR
-    const cashFlows = [-projectData.totalCapex];
+    const cashFlows = [];
     projections.yearlyData.forEach((d, i) => {
         const ebitda = d.revenue - d.opex;
         const residual = i === 4 ? projectData.totalCapex * 0.25 : 0;
         cashFlows.push(ebitda + residual);
     });
-    
-    const irr = calculateIRRSimplified ? calculateIRRSimplified(cashFlows) : 0;
+
+    const irr = (typeof calculateIRR === 'function') ? calculateIRR(projectData.totalCapex, cashFlows) : 0;
     const irrEl = document.getElementById('metric_irr');
-    if (irrEl) irrEl.textContent = (irr * 100).toFixed(1) + '%';
+    if (irrEl) irrEl.textContent = irr.toFixed(1) + '%';
     
     // NPV
     const npv = projections.npv || 0;
