@@ -332,12 +332,44 @@ function updateInvestmentStructure(structure) {
         console.warn('Investment structure is undefined');
         return;
     }
-    
+
     safeUpdateElement('structureTotalCapex', '$' + (structure.totalCapex || 0).toLocaleString());
     safeUpdateElement('structureTotalLpPool', '$' + (structure.totalLpCapital || 0).toLocaleString());
     safeUpdateElement('structureInvestorLpShare', (structure.investorLpSharePercent || 0).toFixed(1) + '%');
     safeUpdateElement('structureInvestorProfitShare', (structure.investorProfitSharePercent || 0).toFixed(1) + '%');
     safeUpdateElement('structureProfitSplit', (structure.gpPercent || 0) + '/' + (structure.lpPercent || 0));
+
+    // Populate investment structure table
+    const tableBody = document.getElementById('investmentStructureTable');
+    if (tableBody) {
+        const gpCapital = structure.totalCapex - structure.totalLpCapital;
+        const lpCapital = structure.totalLpCapital;
+        const totalCapex = structure.totalCapex || 1; // Avoid division by zero
+
+        const gpPercent = (gpCapital / totalCapex * 100).toFixed(1);
+        const lpPercent = (lpCapital / totalCapex * 100).toFixed(1);
+
+        tableBody.innerHTML = `
+            <tr>
+                <td>GP (General Partner)</td>
+                <td class="number">$${gpCapital.toLocaleString()}</td>
+                <td class="number">${gpPercent}%</td>
+                <td class="number">${structure.gpPercent || 0}%</td>
+            </tr>
+            <tr>
+                <td>LP Pool</td>
+                <td class="number">$${lpCapital.toLocaleString()}</td>
+                <td class="number">${lpPercent}%</td>
+                <td class="number">${structure.lpPercent || 0}%</td>
+            </tr>
+            <tr class="total-row">
+                <td><strong>Total</strong></td>
+                <td class="number"><strong>$${totalCapex.toLocaleString()}</strong></td>
+                <td class="number"><strong>100.0%</strong></td>
+                <td class="number"><strong>100%</strong></td>
+            </tr>
+        `;
+    }
 }
 
 function updateLpReturns(lp, structure) {
