@@ -224,9 +224,10 @@ function createRevenueEbitdaChart(projections) {
         return;
     }
     
-    // Destroy existing chart
-    if (window.revenueEbitdaChart && typeof window.revenueEbitdaChart.destroy === 'function') {
-        window.revenueEbitdaChart.destroy();
+    // Destroy existing chart using Chart.js API
+    const existingChart = Chart.getChart(ctx);
+    if (existingChart) {
+        existingChart.destroy();
     }
     
     const years = projections.yearlyData.map(d => `Year ${d.year}`);
@@ -315,8 +316,10 @@ function createOpexBreakdownChart(projections) {
         return;
     }
     
-    if (window.opexBreakdownChart && typeof window.opexBreakdownChart.destroy === 'function') {
-        window.opexBreakdownChart.destroy();
+    // Destroy existing chart using Chart.js API
+    const existingChart = Chart.getChart(ctx);
+    if (existingChart) {
+        existingChart.destroy();
     }
     
     const years = projections.yearlyData.map(d => `Year ${d.year}`);
@@ -396,8 +399,10 @@ function createCumulativeCashFlowChart(projections) {
         return;
     }
     
-    if (window.cumulativeCashFlowChart && typeof window.cumulativeCashFlowChart.destroy === 'function') {
-        window.cumulativeCashFlowChart.destroy();
+    // Destroy existing chart using Chart.js API
+    const existingChart = Chart.getChart(ctx);
+    if (existingChart) {
+        existingChart.destroy();
     }
     
     const years = ['Start'].concat(projections.yearlyData.map(d => `Year ${d.year}`));
@@ -420,6 +425,7 @@ function createCumulativeCashFlowChart(projections) {
                 data: cumulativeData,
                 borderColor: '#2d6a4f',
                 backgroundColor: function(context) {
+                    if (!context.parsed) return 'rgba(45, 106, 79, 0.2)';
                     const value = context.parsed.y;
                     return value >= 0 ? 'rgba(45, 106, 79, 0.2)' : 'rgba(231, 76, 60, 0.2)';
                 },
@@ -427,6 +433,7 @@ function createCumulativeCashFlowChart(projections) {
                 fill: true,
                 tension: 0.4,
                 pointBackgroundColor: function(context) {
+                    if (!context.parsed) return '#2d6a4f';
                     const value = context.parsed.y;
                     return value >= 0 ? '#2d6a4f' : '#e74c3c';
                 },
@@ -500,8 +507,10 @@ function createEbitdaMarginChart(projections) {
         return;
     }
     
-    if (window.ebitdaMarginChart && typeof window.ebitdaMarginChart.destroy === 'function') {
-        window.ebitdaMarginChart.destroy();
+    // Destroy existing chart using Chart.js API
+    const existingChart = Chart.getChart(ctx);
+    if (existingChart) {
+        existingChart.destroy();
     }
     
     const years = projections.yearlyData.map(d => `Year ${d.year}`);
