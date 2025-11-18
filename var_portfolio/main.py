@@ -19,7 +19,8 @@ import pandas as pd
 from datetime import datetime
 
 # Add package to path
-sys.path.insert(0, '/home/user/var_portfolio')
+import os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from data.market_data import MarketDataGenerator
 from var.var_engine import VaREngine

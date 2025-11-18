@@ -445,7 +445,8 @@ def main():
 
     # Import dependencies
     import sys
-    sys.path.insert(0, '/home/user/var_portfolio')
+    import os
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     from data.market_data import MarketDataGenerator
 
     # Generate sample data

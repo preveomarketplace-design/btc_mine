@@ -90,8 +90,14 @@ pip install matplotlib seaborn
 ### Run Full Demo
 
 ```bash
-cd /home/user/var_portfolio
+# Navigate to the var_portfolio directory
+cd var_portfolio
 python main.py
+```
+
+Or from parent directory:
+```bash
+python var_portfolio/main.py
 ```
 
 ### Individual Modules

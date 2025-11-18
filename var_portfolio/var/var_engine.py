@@ -433,5 +433,6 @@ def main():
 
 if __name__ == "__main__":
     import sys
-    sys.path.insert(0, '/home/user/var_portfolio')
+    import os
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     main()
