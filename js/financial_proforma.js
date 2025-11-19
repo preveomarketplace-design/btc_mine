@@ -591,6 +591,110 @@ function createEbitdaMarginChart(projections) {
 }
 
 /**
+ * Update Investment Structure Table
+ */
+function updateInvestmentStructureTable() {
+    console.log('Updating Investment Structure Table...');
+
+    const tbody = document.getElementById('investmentStructureTable');
+    if (!tbody) {
+        console.error('❌ investmentStructureTable not found!');
+        return;
+    }
+
+    // Get investment structure data
+    const splitValue = document.getElementById('gpLpSplit')?.value || localStorage.getItem('gpLpSplit') || '40-60';
+    const [gpPercent, lpPercent] = splitValue.split('-').map(v => parseInt(v));
+
+    const totalLpCapital = parseFloat(document.getElementById('totalLpCapital')?.value || localStorage.getItem('totalLpCapital')) || 0;
+    const investorCapital = parseFloat(document.getElementById('investorCapital')?.value || localStorage.getItem('investorCapital')) || 0;
+    const totalCapex = projectData.totalCapex || 0;
+
+    // Calculate GP capital (total minus LP)
+    const gpCapital = Math.max(0, totalCapex - totalLpCapital);
+
+    // Calculate percentages
+    const gpCapitalPercent = totalCapex > 0 ? (gpCapital / totalCapex) * 100 : 0;
+    const lpCapitalPercent = totalCapex > 0 ? (totalLpCapital / totalCapex) * 100 : 0;
+
+    // Clear and populate table
+    tbody.innerHTML = '';
+
+    // GP Row
+    const gpRow = tbody.insertRow();
+    gpRow.innerHTML = `
+        <td><strong>GP (Operator)</strong></td>
+        <td class="number">$${formatNumber(gpCapital)}</td>
+        <td class="number">${gpCapitalPercent.toFixed(1)}%</td>
+        <td class="number">${gpPercent}%</td>
+    `;
+
+    // LP Pool Row
+    const lpRow = tbody.insertRow();
+    lpRow.innerHTML = `
+        <td><strong>LP Pool</strong></td>
+        <td class="number">$${formatNumber(totalLpCapital)}</td>
+        <td class="number">${lpCapitalPercent.toFixed(1)}%</td>
+        <td class="number">${lpPercent}%</td>
+    `;
+
+    // Total Row
+    const totalRow = tbody.insertRow();
+    totalRow.style.fontWeight = '600';
+    totalRow.style.borderTop = '2px solid #dee2e6';
+    totalRow.innerHTML = `
+        <td><strong>Total</strong></td>
+        <td class="number">$${formatNumber(totalCapex)}</td>
+        <td class="number">100%</td>
+        <td class="number">100%</td>
+    `;
+
+    console.log('✅ Investment Structure Table updated');
+}
+
+/**
+ * Update LP Returns Section
+ */
+function updateLpReturnsSection(projections) {
+    console.log('Updating LP Returns Section...');
+
+    if (!projections || !projections.yearlyData) return;
+
+    // Get structure info
+    const splitValue = document.getElementById('gpLpSplit')?.value || localStorage.getItem('gpLpSplit') || '40-60';
+    const [gpPercent, lpPercent] = splitValue.split('-').map(v => parseInt(v));
+
+    const totalLpCapital = parseFloat(document.getElementById('totalLpCapital')?.value || localStorage.getItem('totalLpCapital')) || 0;
+    const investorCapital = parseFloat(document.getElementById('investorCapital')?.value || localStorage.getItem('investorCapital')) || 0;
+
+    // Calculate investor's share of LP pool
+    const investorLpSharePercent = totalLpCapital > 0 ? (investorCapital / totalLpCapital) : 0;
+
+    // Calculate total revenue and EBITDA
+    const totalRevenue = projections.yearlyData.reduce((sum, d) => sum + (d.revenue || 0), 0);
+    const totalOpex = projections.yearlyData.reduce((sum, d) => sum + (d.opex || 0), 0);
+    const totalEbitda = totalRevenue - totalOpex;
+
+    // LP pool gets lpPercent of EBITDA
+    const totalLpReturn = totalEbitda * (lpPercent / 100);
+
+    // This investor's share
+    const investorReturn = totalLpReturn * investorLpSharePercent;
+    const investorROI = investorCapital > 0 ? ((investorReturn / investorCapital) * 100) : 0;
+
+    // Update display elements
+    const lpInvestmentEl = document.getElementById('lpInvestment');
+    const lpReturnEl = document.getElementById('lpReturn');
+    const lpROIEl = document.getElementById('lpROI');
+
+    if (lpInvestmentEl) lpInvestmentEl.textContent = '$' + formatNumber(investorCapital);
+    if (lpReturnEl) lpReturnEl.textContent = '$' + formatNumber(investorReturn);
+    if (lpROIEl) lpROIEl.textContent = investorROI.toFixed(1) + '%';
+
+    console.log('✅ LP Returns Section updated');
+}
+
+/**
  * Format number with commas
  */
 function formatNumber(num) {
@@ -618,6 +722,8 @@ function updateProFormaReport(projections, inputs) {
     updateProFormaIncomeStatement(projections, yearlyPrices);
     updateProFormaCashFlow(projections);
     updateKeyMetrics(projections, inputs);
+    updateInvestmentStructureTable();
+    updateLpReturnsSection(projections);
     
     // Create all charts (with delays to ensure DOM is ready)
     setTimeout(() => {
