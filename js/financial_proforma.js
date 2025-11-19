@@ -695,6 +695,119 @@ function updateLpReturnsSection(projections) {
 }
 
 /**
+ * Update GP Returns Section
+ */
+function updateGpReturnsSection(projections) {
+    console.log('Updating GP Returns Section...');
+
+    if (!projections || !projections.yearlyData) return;
+
+    // Get structure info
+    const splitValue = document.getElementById('gpLpSplit')?.value || localStorage.getItem('gpLpSplit') || '40-60';
+    const [gpPercent, lpPercent] = splitValue.split('-').map(v => parseInt(v));
+
+    // Calculate total EBITDA
+    const totalRevenue = projections.yearlyData.reduce((sum, d) => sum + (d.revenue || 0), 0);
+    const totalOpex = projections.yearlyData.reduce((sum, d) => sum + (d.opex || 0), 0);
+    const totalEbitda = totalRevenue - totalOpex;
+
+    // GP gets gpPercent of EBITDA
+    const gpProfit = totalEbitda * (gpPercent / 100);
+
+    // Update display elements
+    const gpShareEl = document.getElementById('gpShare');
+    const gpProfitEl = document.getElementById('gpProfit');
+    const gpLpRatioEl = document.getElementById('gpLpRatio');
+
+    if (gpShareEl) gpShareEl.textContent = gpPercent + '%';
+    if (gpProfitEl) gpProfitEl.textContent = '$' + formatNumber(gpProfit);
+    if (gpLpRatioEl) gpLpRatioEl.textContent = gpPercent + ':' + lpPercent;
+
+    console.log('✅ GP Returns Section updated');
+}
+
+/**
+ * Update Sensitivity Analysis Table
+ */
+function updateSensitivityAnalysis(projections) {
+    console.log('Updating Sensitivity Analysis...');
+
+    if (!projections || !projections.yearlyData) return;
+
+    // Get base values
+    const totalCapex = projectData.totalCapex || 0;
+    const totalOpex = projectData.totalOpex || 0;
+    const baseHashratePH = projectData.totalHashratePH || 1;
+
+    // BTC price scenarios
+    const btcPrices = [150000, 120000, 100000, 80000, 60000];
+    // Hashrate multipliers (as percentages)
+    const hashrateMultipliers = [
+        { label: '100', mult: 1.0 },
+        { label: '120', mult: 1.2 },
+        { label: '150', mult: 1.5 },
+        { label: '80', mult: 0.8 },
+        { label: '50', mult: 0.5 }
+    ];
+
+    // Calculate IRR for each scenario
+    btcPrices.forEach(btcPrice => {
+        hashrateMultipliers.forEach(hr => {
+            const elementId = `sens_${btcPrice / 1000}_${hr.label}`;
+            const element = document.getElementById(elementId);
+
+            if (element) {
+                // Calculate revenue with adjusted hashrate
+                const adjustedHashrate = baseHashratePH * hr.mult;
+
+                // Simplified revenue calculation (proportional to hashrate and BTC price)
+                // Base revenue from projections, scaled by price and hashrate
+                const baseRevenue = projections.yearlyData.reduce((sum, d) => sum + (d.revenue || 0), 0);
+                const baseBtcPrice = 100000; // Assume base price
+
+                // Scale revenue by BTC price and hashrate
+                const adjustedRevenue = (baseRevenue / baseBtcPrice) * btcPrice * hr.mult;
+
+                // OPEX scales with hashrate (more miners = more costs)
+                const adjustedOpex = totalOpex * 5 * hr.mult; // 5 years
+
+                // CAPEX scales with hashrate
+                const adjustedCapex = totalCapex * hr.mult;
+
+                // Equipment residual
+                const equipmentResidual = adjustedCapex * 0.25;
+
+                // Calculate IRR
+                let irr = 0;
+                if (typeof calculateIRRSimplified === 'function' && adjustedCapex > 0) {
+                    irr = calculateIRRSimplified(adjustedCapex, adjustedRevenue, adjustedOpex, equipmentResidual);
+                }
+
+                // Format and display
+                if (isNaN(irr) || !isFinite(irr)) {
+                    element.textContent = 'N/A';
+                } else {
+                    element.textContent = irr.toFixed(1) + '%';
+
+                    // Color code based on IRR
+                    if (irr > 20) {
+                        element.style.color = '#2d6a4f';
+                        element.style.fontWeight = '600';
+                    } else if (irr > 0) {
+                        element.style.color = '#3498db';
+                    } else {
+                        element.style.color = '#e74c3c';
+                        element.style.fontWeight = '600';
+                    }
+                }
+            }
+        });
+    });
+
+    console.log('✅ Sensitivity Analysis updated');
+}
+
+/**
  * Format number with commas
  */
 function formatNumber(num) {
@@ -724,6 +837,8 @@ function updateProFormaReport(projections, inputs) {
     updateKeyMetrics(projections, inputs);
     updateInvestmentStructureTable();
     updateLpReturnsSection(projections);
+    updateGpReturnsSection(projections);
+    updateSensitivityAnalysis(projections);
     
     // Create all charts (with delays to ensure DOM is ready)
     setTimeout(() => {
