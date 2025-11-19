@@ -186,23 +186,47 @@ function updateKeyMetrics(projections, inputs) {
     
     const irr = calculateIRRSimplified ? calculateIRRSimplified(cashFlows) : 0;
     const irrEl = document.getElementById('metric_irr');
-    if (irrEl) irrEl.textContent = (irr * 100).toFixed(1) + '%';
-    
+    if (irrEl) {
+        if (isNaN(irr) || !isFinite(irr)) {
+            irrEl.textContent = 'N/A';
+        } else {
+            irrEl.textContent = (irr * 100).toFixed(1) + '%';
+        }
+    }
+
     // NPV
     const npv = projections.npv || 0;
     const npvEl = document.getElementById('metric_npv');
-    if (npvEl) npvEl.textContent = '$' + formatNumber(npv);
-    
+    if (npvEl) {
+        if (isNaN(npv) || !isFinite(npv)) {
+            npvEl.textContent = 'N/A';
+        } else {
+            npvEl.textContent = '$' + formatNumber(npv);
+        }
+    }
+
     // Payback Period
     const payback = projections.paybackYear || 0;
     const paybackEl = document.getElementById('metric_payback');
-    if (paybackEl) paybackEl.textContent = payback.toFixed(1) + ' yrs';
-    
+    if (paybackEl) {
+        if (isNaN(payback) || !isFinite(payback)) {
+            paybackEl.textContent = 'N/A';
+        } else {
+            paybackEl.textContent = payback.toFixed(1) + ' yrs';
+        }
+    }
+
     // Total ROI
     const totalReturn = projections.cumulative || 0;
     const roi = projectData.totalCapex > 0 ? ((totalReturn / projectData.totalCapex) * 100) : 0;
     const roiEl = document.getElementById('metric_roi');
-    if (roiEl) roiEl.textContent = roi.toFixed(1) + '%';
+    if (roiEl) {
+        if (isNaN(roi) || !isFinite(roi)) {
+            roiEl.textContent = 'N/A';
+        } else {
+            roiEl.textContent = roi.toFixed(1) + '%';
+        }
+    }
     
     console.log('✅ Key Metrics updated');
 }
