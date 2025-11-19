@@ -176,15 +176,14 @@ function updateKeyMetrics(projections, inputs) {
     
     if (!projections) return;
     
-    // IRR
-    const cashFlows = [-projectData.totalCapex];
-    projections.yearlyData.forEach((d, i) => {
-        const ebitda = d.revenue - d.opex;
-        const residual = i === 4 ? projectData.totalCapex * 0.25 : 0;
-        cashFlows.push(ebitda + residual);
-    });
-    
-    const irr = calculateIRRSimplified ? calculateIRRSimplified(cashFlows) : 0;
+    // IRR - calculate totals from yearly data
+    const totalRevenue = projections.yearlyData.reduce((sum, d) => sum + (d.revenue || 0), 0);
+    const totalOpex = projections.yearlyData.reduce((sum, d) => sum + (d.opex || 0), 0);
+    const equipmentResidual = projectData.totalCapex * 0.25;
+
+    const irr = (typeof calculateIRRSimplified === 'function')
+        ? calculateIRRSimplified(projectData.totalCapex, totalRevenue, totalOpex, equipmentResidual) / 100
+        : 0;
     const irrEl = document.getElementById('metric_irr');
     if (irrEl) {
         if (isNaN(irr) || !isFinite(irr)) {
