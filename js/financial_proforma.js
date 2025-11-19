@@ -808,6 +808,130 @@ function updateSensitivityAnalysis(projections) {
 }
 
 /**
+ * Create Cash Flow Waterfall Chart
+ */
+function createWaterfallChart(projections) {
+    console.log('Creating Waterfall Chart...');
+
+    const ctx = document.getElementById('waterfallChart');
+    if (!ctx) {
+        console.error('❌ Canvas waterfallChart not found!');
+        return;
+    }
+
+    if (!window.Chart) {
+        console.error('❌ Chart.js not loaded!');
+        return;
+    }
+
+    // Destroy existing chart
+    if (window.waterfallChart && typeof window.waterfallChart.destroy === 'function') {
+        window.waterfallChart.destroy();
+    }
+
+    if (!projections || !projections.yearlyData) return;
+
+    const totalCapex = projectData.totalCapex || 0;
+    const equipmentResidual = totalCapex * 0.25;
+
+    // Build waterfall data
+    const labels = ['Initial CAPEX'];
+    const data = [-totalCapex / 1000];
+    const colors = ['rgba(231, 76, 60, 0.7)'];
+
+    let cumulative = -totalCapex;
+
+    projections.yearlyData.forEach((d, i) => {
+        const ebitda = (d.revenue || 0) - (d.opex || 0);
+        const residual = i === 4 ? equipmentResidual : 0;
+        const yearCashFlow = ebitda + residual;
+
+        cumulative += yearCashFlow;
+
+        const label = i === 4 ? 'Year 5 + Residual' : `Year ${i + 1} EBITDA`;
+        labels.push(label);
+        data.push(yearCashFlow / 1000);
+        colors.push(yearCashFlow >= 0 ? 'rgba(45, 106, 79, 0.7)' : 'rgba(231, 76, 60, 0.7)');
+    });
+
+    // Add final cumulative
+    labels.push('Final Position');
+    data.push(cumulative / 1000);
+    colors.push(cumulative >= 0 ? 'rgba(52, 152, 219, 0.7)' : 'rgba(231, 76, 60, 0.7)');
+
+    window.waterfallChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Cash Flow ($1,000s)',
+                data: data,
+                backgroundColor: colors,
+                borderColor: colors.map(c => c.replace('0.7', '1')),
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const value = context.parsed.y * 1000;
+                            return (value >= 0 ? '+' : '') + '$' + value.toLocaleString();
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: {
+                        font: { size: 10 },
+                        color: '#6c757d',
+                        maxRotation: 45,
+                        minRotation: 45
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Cash Flow ($1,000s)',
+                        font: { size: 11, weight: '600' },
+                        color: '#6c757d'
+                    },
+                    grid: {
+                        color: function(context) {
+                            if (context.tick.value === 0) {
+                                return 'rgba(0, 0, 0, 0.3)';
+                            }
+                            return 'rgba(0, 0, 0, 0.05)';
+                        },
+                        lineWidth: function(context) {
+                            if (context.tick.value === 0) {
+                                return 2;
+                            }
+                            return 1;
+                        }
+                    },
+                    ticks: {
+                        font: { size: 10 },
+                        color: '#6c757d',
+                        callback: function(value) {
+                            return '$' + value + 'k';
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    console.log('✅ Waterfall Chart created');
+}
+
+/**
  * Format number with commas
  */
 function formatNumber(num) {
@@ -846,6 +970,7 @@ function updateProFormaReport(projections, inputs) {
         createOpexBreakdownChart(projections);
         createCumulativeCashFlowChart(projections);
         createEbitdaMarginChart(projections);
+        createWaterfallChart(projections);
     }, 100);
     
     console.log('✅ Pro Forma Report update complete');
